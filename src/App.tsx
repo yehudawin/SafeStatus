@@ -7,6 +7,7 @@ import LoginPage from '@/pages/LoginPage'
 import HomePage from '@/pages/HomePage'
 import UpdateStatusPage from '@/pages/UpdateStatusPage'
 import ContactSyncPage from '@/pages/ContactSyncPage'
+import PrivacyPage from '@/pages/PrivacyPage'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -22,20 +23,22 @@ function AppContent() {
     )
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-dark text-white font-heebo">
-        <LoginPage onLogin={() => {}} />
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-dark text-white font-heebo">
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/update-status" element={<UpdateStatusPage />} />
-        <Route path="/contact-sync" element={<ContactSyncPage />} />
+        {/* Public routes */}
+        <Route path="/privacy" element={<PrivacyPage />} />
+        
+        {/* Protected routes */}
+        {!user ? (
+          <Route path="*" element={<LoginPage onLogin={() => {}} />} />
+        ) : (
+          <>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/update-status" element={<UpdateStatusPage />} />
+            <Route path="/contact-sync" element={<ContactSyncPage />} />
+          </>
+        )}
       </Routes>
     </div>
   )

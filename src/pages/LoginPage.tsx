@@ -197,7 +197,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             </button>
 
             <div className="mt-4 text-xs text-gray-400 text-center">
-              בלחיצה על "שלח קוד אימות" אתה מסכים לתנאי השימוש
+              בלחיצה על "שלח קוד אימות" אתה מסכים לתנאי השימוש ו
+              <a href="/privacy" className="text-blue-400 hover:underline">מדיניות הפרטיות</a>
             </div>
           </div>
         ) : (
