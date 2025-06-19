@@ -52,8 +52,7 @@ jobs:
           echo "SIGNING_ENABLED=false" >> $GITHUB_ENV
         fi
         
-    - name: 🏗️ Build APK (Debug)
-      if: ${{ github.event_name == 'pull_request' }}
+    - name: 🏗️ Build APK (Debug) 
       run: |
         cd android
         chmod +x gradlew
@@ -82,7 +81,6 @@ jobs:
         ./gradlew bundleRelease
         
     - name: 📤 Upload APK Artifact
-      if: ${{ github.event_name == 'pull_request' || env.SIGNING_ENABLED == 'false' }}
       uses: actions/upload-artifact@v4
       with:
         name: SafeStatus-APK-${{ github.sha }}
