@@ -17,7 +17,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: ☕ Setup Java JDK
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
@@ -83,7 +83,7 @@ jobs:
         
     - name: 📤 Upload APK Artifact
       if: ${{ github.event_name == 'pull_request' || env.SIGNING_ENABLED == 'false' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: SafeStatus-APK-${{ github.sha }}
         path: |
@@ -93,7 +93,7 @@ jobs:
         
     - name: 📤 Upload AAB Artifact
       if: ${{ env.SIGNING_ENABLED == 'true' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: SafeStatus-AAB-${{ github.sha }}
         path: android/app/build/outputs/bundle/release/app-release.aab
