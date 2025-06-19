@@ -82,25 +82,20 @@ jobs:
         cd android
         chmod +x gradlew
         ./gradlew assembleRelease \
-          -Pandroid.injected.signing.store.file=my-release-key.keystore \
+          -Pandroid.injected.signing.store.file=$PWD/app/my-release-key.keystore \
           -Pandroid.injected.signing.store.password=safestatus123 \
           -Pandroid.injected.signing.key.alias=my-key-alias \
           -Pandroid.injected.signing.key.password=safestatus123
         
     - name: 🏗️ Build AAB (Release - Signed)
-      if: ${{ env.SIGNING_ENABLED == 'true' }}
-      env:
-        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       run: |
         cd android
         chmod +x gradlew
-        echo "storePassword=$KEYSTORE_PASSWORD" >> gradle.properties
-        echo "keyPassword=$KEY_PASSWORD" >> gradle.properties
-        echo "keyAlias=$KEY_ALIAS" >> gradle.properties
-        echo "storeFile=keystore.jks" >> gradle.properties
-        ./gradlew bundleRelease
+        ./gradlew bundleRelease \
+          -Pandroid.injected.signing.store.file=$PWD/app/my-release-key.keystore \
+          -Pandroid.injected.signing.store.password=safestatus123 \
+          -Pandroid.injected.signing.key.alias=my-key-alias \
+          -Pandroid.injected.signing.key.password=safestatus123
         
     - name: 📤 Upload APK Artifacts
       uses: actions/upload-artifact@v4
@@ -112,7 +107,6 @@ jobs:
         retention-days: 30
         
     - name: 📤 Upload AAB Artifact
-      if: ${{ env.SIGNING_ENABLED == 'true' }}
       uses: actions/upload-artifact@v4
       with:
         name: SafeStatus-AAB-${{ github.sha }}
