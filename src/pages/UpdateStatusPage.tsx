@@ -1,0 +1,129 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
+import Header from '@/components/Header'
+import StatusButton from '@/components/StatusButton'
+import { useAuth } from '@/contexts/AuthContext'
+import { updateUserStatus, getUserByPhone } from '@/supabase/client'
+import { getStatusText, getStatusColor, formatRelativeTime } from '@/types'
+import type { UserStatus } from '@/types'
+
+export default function UpdateStatusPage() {
+  const navigate = useNavigate()
+  const { userPhone } = useAuth()
+  const [currentStatus, setCurrentStatus] = useState<UserStatus>('none')
+  const [lastUpdated, setLastUpdated] = useState(new Date().toISOString())
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  const loadCurrentStatus = async () => {
+    if (!userPhone) return
+    
+    setLoading(true)
+    try {
+      const result = await getUserByPhone(userPhone)
+      if (result.success && result.data) {
+        setCurrentStatus(result.data.status)
+        setLastUpdated(result.data.last_updated)
+      }
+    } catch (error) {
+      console.error('Error loading current status:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleStatusUpdate = async (newStatus: UserStatus) => {
+    if (!userPhone) return
+    
+    setIsUpdating(true)
+    
+    try {
+      const result = await updateUserStatus(userPhone, newStatus)
+      
+      if (result.success) {
+        setCurrentStatus(newStatus)
+        setLastUpdated(new Date().toISOString())
+        toast.success('הסטטוס עודכן בהצלחה!')
+        
+        // Haptic feedback if available
+        if (navigator.vibrate) {
+          navigator.vibrate(100)
+        }
+      } else {
+        toast.error(result.error || 'שגיאה בעדכון הסטטוס')
+      }
+    } catch (error) {
+      toast.error('שגיאה בחיבור לשרת')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+  
+  useEffect(() => {
+    if (userPhone) {
+      loadCurrentStatus()
+    }
+  }, [userPhone])
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-dark">
+        <Header
+          title="עדכון מצב"
+          showBack
+          onBack={() => navigate('/')}
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-400">טוען מצב נוכחי...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-dark">
+      <Header
+        title="עדכון מצב"
+        showBack
+        onBack={() => navigate('/')}
+      />
+      
+      <div className="mt-20 px-6">
+        {/* Current Status */}
+        <div className="bg-dark-surface p-5 rounded-lg mb-8 text-center">
+          <h2 className="text-lg mb-2">המצב שלך כרגע</h2>
+          <div className={`font-bold text-xl mb-2 flex justify-center items-center ${getStatusColor(currentStatus)}`}>
+            {getStatusText(currentStatus)}
+          </div>
+          <div className="text-xs text-gray-400">
+            עודכן לאחרונה: {formatRelativeTime(lastUpdated)}
+          </div>
+        </div>
+        
+        {/* Status Buttons */}
+        <div className="space-y-6">
+          <StatusButton
+            status="shelter"
+            onClick={handleStatusUpdate}
+            disabled={isUpdating}
+          />
+          
+          <StatusButton
+            status="safe"
+            onClick={handleStatusUpdate}
+            disabled={isUpdating}
+          />
+        </div>
+        
+        {/* Information Note */}
+        <div className="mt-8 text-sm text-gray-400 text-center px-4">
+          העדכון ישלח באופן אוטומטי לכל אנשי הקשר ששמרו אותך
+        </div>
+      </div>
+    </div>
+  )
+} 

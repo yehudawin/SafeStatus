@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* RTL Support */
+body {
+  font-family: 'Inter', 'Heebo', sans-serif;
+  direction: rtl;
+}
+
+/* Custom scrollbar hidden */
+::-webkit-scrollbar {
+  display: none;
+}
+
+html, body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Base styles */
+@layer base {
+  body {
+    @apply bg-dark text-white;
+  }
+} 
