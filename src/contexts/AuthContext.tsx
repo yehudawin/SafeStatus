@@ -7,7 +7,6 @@ interface AuthContextType {
   userPhone: string | null
   loading: boolean
   signOut: () => Promise<void>
-  mockLogin: (phone: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -15,7 +14,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [mockUser, setMockUser] = useState<{phone: string} | null>(null)
 
   useEffect(() => {
     // Get initial session
@@ -47,25 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
-    setMockUser(null)
   }
 
-  const mockLogin = async (phone: string) => {
-    // Set RLS context for mock user
-    await supabase.rpc('set_current_user_phone', { user_phone: phone })
-    setMockUser({ phone })
-  }
-
-  const userPhone = user?.phone || mockUser?.phone || null
+  const userPhone = user?.phone || null
 
   return (
     <AuthContext.Provider
       value={{
-        user: user || (mockUser ? { phone: mockUser.phone } as User : null),
+        user,
         userPhone,
         loading,
         signOut,
-        mockLogin,
       }}
     >
       {children}

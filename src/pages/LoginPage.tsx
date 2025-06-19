@@ -1,14 +1,12 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '@/supabase/client'
-import { useAuth } from '@/contexts/AuthContext'
 
 interface LoginPageProps {
   onLogin: (phone: string) => void
 }
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
-  const { mockLogin } = useAuth()
   const [phone, setPhone] = useState('')
   const [otp, setOtp] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -77,11 +75,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
     } catch (error) {
       console.error('Error sending OTP:', error)
-      toast.error('שגיאה בשליחת קוד אימות. במצב פיתוח - השתמש בקוד 123456')
-      
-      // For development mode, allow continuing with mock OTP
-      setIsOtpSent(true)
-      setPhone(validPhone) // Update with formatted phone
+      toast.error('שגיאה בשליחת קוד אימות. אנא נסה שוב')
     } finally {
       setIsLoading(false)
     }
@@ -101,26 +95,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setIsLoading(true)
 
     try {
-      // In development mode, allow mock OTP
-      if (otp === '123456') {
-        // Simulate successful login for development
-        toast.success('התחברת בהצלחה! (מצב פיתוח)')
-        
-        // Create user in database if doesn't exist
-        await supabase.from('users').upsert({ 
-          phone, 
-          status: 'none', 
-          last_updated: new Date().toISOString() 
-        })
-        
-        // Set RLS context
-        await supabase.rpc('set_current_user_phone', { user_phone: phone })
-        
-        // Create a mock user session for testing
-        await mockLogin(phone)
-        return
-      }
-
       const { error } = await supabase.auth.verifyOtp({
         phone,
         token: otp,
@@ -136,7 +110,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
     } catch (error) {
       console.error('Error verifying OTP:', error)
-      toast.error('קוד אימות שגוי. במצב פיתוח - השתמש בקוד 123456')
+      toast.error('קוד אימות שגוי. אנא נסה שוב')
     } finally {
       setIsLoading(false)
     }
@@ -163,10 +137,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <p className="text-gray-400">עדכון מצב במצבי חירום</p>
         </div>
 
-        {/* Development Mode Notice */}
-        <div className="bg-amber-900/20 border border-amber-600 rounded-lg p-3 mb-4 text-amber-300 text-sm text-center">
-          מצב פיתוח: השתמש בקוד 123456 לאימות
-        </div>
+
 
         {!isOtpSent ? (
           /* Phone Input Screen */

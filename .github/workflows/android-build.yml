@@ -68,13 +68,24 @@ jobs:
         echo "=== APK Size ==="
         du -h app/build/outputs/apk/debug/app-debug.apk
         
-    # Skip release unsigned build for now - we only want debug APK
-    # - name: 🏗️ Build APK (Release - Unsigned)
-    #   if: ${{ env.SIGNING_ENABLED == 'false' }}
-    #   run: |
-    #     cd android
-    #     chmod +x gradlew
-    #     ./gradlew assembleRelease
+    - name: 🔑 Generate Release Keystore
+      run: |
+        cd android
+        keytool -genkey -v -keystore my-release-key.keystore \
+          -keyalg RSA -keysize 2048 -validity 10000 \
+          -alias my-key-alias \
+          -dname "CN=SafeStatus, OU=Development, O=SafeStatus App, L=Tel Aviv, S=Israel, C=IL" \
+          -storepass safestatus123 -keypass safestatus123
+
+    - name: 🏗️ Build APK (Release - Signed)
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleRelease \
+          -Pandroid.injected.signing.store.file=my-release-key.keystore \
+          -Pandroid.injected.signing.store.password=safestatus123 \
+          -Pandroid.injected.signing.key.alias=my-key-alias \
+          -Pandroid.injected.signing.key.password=safestatus123
         
     - name: 🏗️ Build AAB (Release - Signed)
       if: ${{ env.SIGNING_ENABLED == 'true' }}
@@ -91,11 +102,13 @@ jobs:
         echo "storeFile=keystore.jks" >> gradle.properties
         ./gradlew bundleRelease
         
-    - name: 📤 Upload APK Artifact
+    - name: 📤 Upload APK Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: SafeStatus-Debug-APK-${{ github.sha }}
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        name: SafeStatus-APKs-${{ github.sha }}
+        path: |
+          android/app/build/outputs/apk/debug/app-debug.apk
+          android/app/build/outputs/apk/release/app-release.apk
         retention-days: 30
         
     - name: 📤 Upload AAB Artifact
