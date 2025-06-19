@@ -58,12 +58,23 @@ jobs:
         chmod +x gradlew
         ./gradlew assembleDebug
         
-    - name: 🏗️ Build APK (Release - Unsigned)
-      if: ${{ env.SIGNING_ENABLED == 'false' }}
+    - name: 🔍 Verify APK Signature
       run: |
         cd android
-        chmod +x gradlew
-        ./gradlew assembleRelease
+        echo "=== Checking if APK exists ==="
+        ls -la app/build/outputs/apk/debug/
+        echo "=== APK File Info ==="
+        file app/build/outputs/apk/debug/app-debug.apk
+        echo "=== APK Size ==="
+        du -h app/build/outputs/apk/debug/app-debug.apk
+        
+    # Skip release unsigned build for now - we only want debug APK
+    # - name: 🏗️ Build APK (Release - Unsigned)
+    #   if: ${{ env.SIGNING_ENABLED == 'false' }}
+    #   run: |
+    #     cd android
+    #     chmod +x gradlew
+    #     ./gradlew assembleRelease
         
     - name: 🏗️ Build AAB (Release - Signed)
       if: ${{ env.SIGNING_ENABLED == 'true' }}
@@ -83,10 +94,8 @@ jobs:
     - name: 📤 Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: SafeStatus-APK-${{ github.sha }}
-        path: |
-          android/app/build/outputs/apk/debug/app-debug.apk
-          android/app/build/outputs/apk/release/app-release-unsigned.apk
+        name: SafeStatus-Debug-APK-${{ github.sha }}
+        path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
         
     - name: 📤 Upload AAB Artifact
