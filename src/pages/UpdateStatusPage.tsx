@@ -107,13 +107,13 @@ export default function UpdateStatusPage() {
         {/* Status Buttons */}
         <div className="space-y-6">
           <StatusButton
-            status="shelter"
+            statusType="shelter"
             onClick={handleStatusUpdate}
             disabled={isUpdating}
           />
           
           <StatusButton
-            status="safe"
+            statusType="safe"
             onClick={handleStatusUpdate}
             disabled={isUpdating}
           />

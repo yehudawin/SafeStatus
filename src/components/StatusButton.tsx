@@ -2,12 +2,12 @@ import { Shield, CheckCircle } from 'lucide-react'
 import type { UserStatus } from '@/types'
 
 interface StatusButtonProps {
-  status: 'shelter' | 'safe'
-  onClick: (status: UserStatus) => void
+  statusType: 'shelter' | 'safe'
+  onClick: (statusValue: UserStatus) => void
   disabled?: boolean
 }
 
-export default function StatusButton({ status, onClick, disabled = false }: StatusButtonProps) {
+export default function StatusButton({ statusType, onClick, disabled = false }: StatusButtonProps) {
   const config = {
     shelter: {
       icon: Shield,
@@ -25,11 +25,11 @@ export default function StatusButton({ status, onClick, disabled = false }: Stat
     }
   }
   
-  const { icon: Icon, text, bgColor, borderColor, textColor } = config[status]
+  const { icon: Icon, text, bgColor, borderColor, textColor } = config[statusType]
   
   return (
     <button
-      onClick={() => onClick(status)}
+      onClick={() => onClick(statusType as UserStatus)}
       disabled={disabled}
       className={`
         w-full ${bgColor} border-2 ${borderColor} rounded-xl p-8 

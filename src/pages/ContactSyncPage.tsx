@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Contact, Users, CheckSquare, Square, UserCheck } from 'lucide-react'
+import { Contact, Users, CheckSquare, Square, UserCheck, Search } from 'lucide-react'
 import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { syncPhoneContacts, getUserContacts, updateContactSelection, selectAllContacts } from '@/supabase/client'
-import { isValidIsraeliPhone, normalizePhoneNumber } from '@/types'
 import type { UserContact, PhoneContact } from '@/types'
 
 export default function ContactSyncPage() {
@@ -15,6 +14,12 @@ export default function ContactSyncPage() {
   const [contacts, setContacts] = useState<UserContact[]>([])
   const [selectedCount, setSelectedCount] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const filteredContacts = useMemo(() => 
+    contacts.filter(contact =>
+      contact.contact_name.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [contacts, searchTerm])
 
   const loadSyncedContacts = async () => {
     if (!userPhone) return
@@ -25,7 +30,6 @@ export default function ContactSyncPage() {
         setContacts(result.data)
         setSelectedCount(result.data.filter(c => c.is_selected).length)
         
-        // If we have synced contacts, go directly to selection
         if (result.data.length > 0) {
           setStep('selecting')
         }
@@ -39,11 +43,14 @@ export default function ContactSyncPage() {
     setStep('syncing')
     setLoading(true)
     
+    toast.warning('שימוש בנתוני הדמיה', {
+      description: 'סנכרון אנשי קשר אמיתי יופעל בגרסת ה-Build של האפליקציה.',
+      duration: 5000,
+    });
+
     try {
-      // Simulate permission request and contact access
       await new Promise(resolve => setTimeout(resolve, 1500))
       
-      // Mock contacts data (in real app, this would come from navigator.contacts API)
       const mockPhoneContacts: PhoneContact[] = [
         { name: 'אמא', phoneNumbers: ['050-1234567'] },
         { name: 'אבא', phoneNumbers: ['052-2345678'] },
@@ -59,7 +66,6 @@ export default function ContactSyncPage() {
         return
       }
 
-      // Sync contacts to database
       const result = await syncPhoneContacts(userPhone, mockPhoneContacts)
       
       if (result.success && result.data) {
@@ -206,7 +212,6 @@ export default function ContactSyncPage() {
     )
   }
 
-  // Selection step
   return (
     <div className="min-h-screen bg-dark">
       <Header 
@@ -215,9 +220,9 @@ export default function ContactSyncPage() {
         onBack={() => setStep('request')}
       />
       
-      <div className="p-4 mt-16">
-        {/* Summary */}
-        <div className="bg-dark-surface rounded-lg p-4 mb-6">
+      <div className="p-4 mt-16 pb-28"> {/* Padding bottom for the fixed footer */}
+        
+        <div className="bg-dark-surface rounded-lg p-4 mb-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold flex items-center">
               <Users className="ml-2" size={20} />
@@ -236,64 +241,59 @@ export default function ContactSyncPage() {
               <CheckSquare className="ml-1" size={16} />
               בחר הכל
             </button>
-            
-            <button
-              onClick={handleFinish}
-              disabled={selectedCount === 0}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          </div>
+        </div>
+
+        <div className="relative mb-4">
+          <input
+            type="text"
+            placeholder="חפש איש קשר..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-3 pl-10 bg-dark-card border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+          />
+          <div className="absolute left-3 top-1/2 -translate-y-1/2">
+            <Search className="text-gray-400" size={20} />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {filteredContacts.map((contact) => (
+            <div
+              key={contact.id}
+              onClick={() => handleContactToggle(contact.id, contact.is_selected)}
+              className="bg-dark-card rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-gray-700 transition-colors"
             >
-              <UserCheck className="ml-1" size={16} />
-              סיים ({selectedCount})
-            </button>
-          </div>
-        </div>
-
-        {/* Contacts List */}
-        <div className="bg-dark-surface rounded-lg p-4">
-          <h3 className="font-medium mb-4">בחר עם מי לשתף סטטוס:</h3>
-          
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {contacts.map((contact) => (
-              <div 
-                key={contact.id} 
-                className="bg-dark-card rounded-lg p-3 flex items-center justify-between hover:bg-gray-800 transition-colors"
-              >
-                <div className="flex items-center">
-                  <button
-                    onClick={() => handleContactToggle(contact.id, contact.is_selected)}
-                    className="ml-3"
-                  >
-                    {contact.is_selected ? (
-                      <CheckSquare className="text-blue-500" size={20} />
-                    ) : (
-                      <Square className="text-gray-500" size={20} />
-                    )}
-                  </button>
-                  
-                  <div>
-                    <p className="font-medium">{contact.contact_name}</p>
-                    <p className="text-sm text-gray-400">
-                      {contact.contact_phone}
-                      {isValidIsraeliPhone(normalizePhoneNumber(contact.contact_phone)) && (
-                        <span className="text-green-400 mr-2">✓</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
+              <div className="flex flex-col">
+                <span className="font-medium">{contact.contact_name}</span>
+                <span className="text-sm text-gray-400">{contact.contact_phone}</span>
               </div>
-            ))}
-          </div>
-        </div>
+              
+              {contact.is_selected ? (
+                <CheckSquare className="text-blue-500" size={24} />
+              ) : (
+                <Square className="text-gray-500" size={24} />
+              )}
+            </div>
+          ))}
 
-        {/* Info */}
-        <div className="mt-6 bg-blue-600/10 border border-blue-600/30 rounded-lg p-4">
-          <h3 className="font-medium mb-2 text-blue-400">חשוב לדעת:</h3>
-          <ul className="text-sm text-blue-300 space-y-1">
-            <li>• רק אנשי קשר שבחרת יוכלו לראות את הסטטוס שלך</li>
-            <li>• כדי לראות את הסטטוס שלהם, גם הם צריכים לבחור אותך</li>
-            <li>• ניתן לשנות את הבחירות בכל עת בהגדרות</li>
-          </ul>
+          {filteredContacts.length === 0 && (
+            <div className="text-center py-8 text-gray-400">
+              <p>{searchTerm ? 'לא נמצאו אנשי קשר התואמים לחיפוש.' : 'לא נמצאו אנשי קשר מסונכרנים.'}</p>
+            </div>
+          )}
         </div>
+      </div>
+      
+      <div className="fixed bottom-0 left-0 w-full bg-dark-surface p-4 border-t border-gray-700 shadow-lg">
+        <button
+          onClick={handleFinish}
+          disabled={selectedCount === 0}
+          className="w-full bg-green-600 text-white py-3 rounded-lg text-lg font-bold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        >
+          <UserCheck className="ml-2" size={20} />
+          סיים ושמור בחירה ({selectedCount})
+        </button>
       </div>
     </div>
   )

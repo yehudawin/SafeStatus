@@ -173,7 +173,8 @@ const PrivacyPage: React.FC = () => {
 
         {/* Footer */}
         <div className="text-center text-gray-500 pt-8 border-t border-gray-700">
-          <p>מדיניות פרטיות זו עודכנה לאחרונה: {new Date().toLocaleDateString('he-IL')}</p>
+          {/* מומלץ לעדכן תאריך זה באופן ידני בעת שינוי מהותי במדיניות */}
+          <p>מדיניות פרטיות זו עודכנה לאחרונה: 29 ביולי 2024</p>
           <p className="mt-2">SafeStatus © 2024 - כל הזכויות שמורות</p>
         </div>
 

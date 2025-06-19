@@ -8,6 +8,7 @@ import HomePage from '@/pages/HomePage'
 import UpdateStatusPage from '@/pages/UpdateStatusPage'
 import ContactSyncPage from '@/pages/ContactSyncPage'
 import PrivacyPage from '@/pages/PrivacyPage'
+import NotFoundPage from '@/pages/NotFoundPage'
 
 function AppContent() {
   const { user, loading } = useAuth()
@@ -37,6 +38,8 @@ function AppContent() {
             <Route path="/" element={<HomePage />} />
             <Route path="/update-status" element={<UpdateStatusPage />} />
             <Route path="/contact-sync" element={<ContactSyncPage />} />
+            {/* Catch-all for logged-in users */}
+            <Route path="*" element={<NotFoundPage />} />
           </>
         )}
       </Routes>

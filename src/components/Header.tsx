@@ -12,6 +12,7 @@ interface HeaderProps {
   onSettings?: () => void
   onContacts?: () => void
   onLogout?: () => void
+  isRefreshing?: boolean
 }
 
 export default function Header({
@@ -25,7 +26,8 @@ export default function Header({
   onRefresh,
   onSettings,
   onContacts,
-  onLogout
+  onLogout,
+  isRefreshing = false
 }: HeaderProps) {
   return (
     <header className="bg-dark-surface p-4 fixed top-0 w-full z-10 shadow-md">
@@ -35,6 +37,7 @@ export default function Header({
             <button 
               onClick={onBack}
               className="p-2 ml-2 rounded-full hover:bg-gray-700"
+              aria-label="חזור"
             >
               <ArrowRight className="w-5 h-5" />
             </button>
@@ -46,15 +49,18 @@ export default function Header({
           {showRefresh && (
             <button 
               onClick={onRefresh}
-              className="p-2 rounded-full hover:bg-gray-700"
+              disabled={isRefreshing}
+              className="p-2 rounded-full hover:bg-gray-700 disabled:opacity-50"
+              aria-label="רענן"
             >
-              <RotateCcw className="w-5 h-5" />
+              <RotateCcw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
           )}
           {showSettings && (
             <button 
               onClick={onSettings}
               className="p-2 rounded-full hover:bg-gray-700"
+              aria-label="הגדרות"
             >
               <Settings className="w-5 h-5" />
             </button>
@@ -64,15 +70,21 @@ export default function Header({
               onClick={onContacts}
               className="p-2 rounded-full hover:bg-gray-700"
               title="נהל אנשי קשר"
+              aria-label="נהל אנשי קשר"
             >
               <Users className="w-5 h-5" />
             </button>
           )}
           {showLogout && (
             <button 
-              onClick={onLogout}
+              onClick={() => {
+                if (window.confirm('האם אתה בטוח שברצונך להתנתק?')) {
+                  onLogout?.()
+                }
+              }}
               className="p-2 rounded-full hover:bg-gray-700 text-red-400 hover:text-red-300"
               title="התנתק"
+              aria-label="התנתק"
             >
               <LogOut className="w-5 h-5" />
             </button>
