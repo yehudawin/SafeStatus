@@ -30,49 +30,51 @@ export default function Header({
   isRefreshing = false
 }: HeaderProps) {
   return (
-    <header className="bg-dark-surface p-4 fixed top-0 w-full z-10 shadow-md">
-      <div className="flex justify-between items-center">
+    <header className="bg-primary p-4 fixed top-0 w-full z-10 shadow-medium header-height flex items-center">
+      <div className="flex justify-between items-center w-full">
+        {/* Right side - Title and Back button */}
         <div className="flex items-center">
+          <h1 className="text-xl font-bold text-white">{title}</h1>
+        </div>
+        
+        {/* Left side - Action buttons (RTL layout) */}
+        <div className="flex space-x-2 space-x-reverse">
           {showBack && (
             <button 
               onClick={onBack}
-              className="p-2 ml-2 rounded-full hover:bg-gray-700"
+              className="p-2 rounded-full hover:bg-black hover:bg-opacity-10 transition-colors"
               aria-label="חזור"
             >
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 text-white" />
             </button>
           )}
-          <h1 className="text-xl font-bold">{title}</h1>
-        </div>
-        
-        <div className="flex space-x-2 space-x-reverse">
           {showRefresh && (
             <button 
               onClick={onRefresh}
               disabled={isRefreshing}
-              className="p-2 rounded-full hover:bg-gray-700 disabled:opacity-50"
+              className="p-2 rounded-full hover:bg-black hover:bg-opacity-10 disabled:opacity-50 transition-colors"
               aria-label="רענן"
             >
-              <RotateCcw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RotateCcw className={`w-5 h-5 text-white ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
           )}
           {showSettings && (
             <button 
               onClick={onSettings}
-              className="p-2 rounded-full hover:bg-gray-700"
+              className="p-2 rounded-full hover:bg-black hover:bg-opacity-10 transition-colors"
               aria-label="הגדרות"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-5 h-5 text-white" />
             </button>
           )}
           {showContacts && (
             <button 
               onClick={onContacts}
-              className="p-2 rounded-full hover:bg-gray-700"
+              className="p-2 rounded-full hover:bg-black hover:bg-opacity-10 transition-colors"
               title="נהל אנשי קשר"
               aria-label="נהל אנשי קשר"
             >
-              <Users className="w-5 h-5" />
+              <Users className="w-5 h-5 text-white" />
             </button>
           )}
           {showLogout && (
@@ -82,11 +84,11 @@ export default function Header({
                   onLogout?.()
                 }
               }}
-              className="p-2 rounded-full hover:bg-gray-700 text-red-400 hover:text-red-300"
+              className="p-2 rounded-full hover:bg-black hover:bg-opacity-10 transition-colors"
               title="התנתק"
               aria-label="התנתק"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-5 h-5 text-white" />
             </button>
           )}
         </div>

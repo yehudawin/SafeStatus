@@ -68,7 +68,7 @@ export default function UpdateStatusPage() {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark">
+      <div className="min-h-screen bg-background">
         <Header
           title="עדכון מצב"
           showBack
@@ -76,8 +76,8 @@ export default function UpdateStatusPage() {
         />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-400">טוען מצב נוכחי...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-text-secondary">טוען מצב נוכחי...</p>
           </div>
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function UpdateStatusPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark">
+    <div className="min-h-screen bg-background">
       <Header
         title="עדכון מצב"
         showBack
@@ -94,12 +94,12 @@ export default function UpdateStatusPage() {
       
       <div className="mt-20 px-6">
         {/* Current Status */}
-        <div className="bg-dark-surface p-5 rounded-lg mb-8 text-center">
-          <h2 className="text-lg mb-2">המצב שלך כרגע</h2>
+        <div className="card-design text-center mb-8">
+          <h2 className="text-lg mb-2 text-text-primary">המצב שלך כרגע</h2>
           <div className={`font-bold text-xl mb-2 flex justify-center items-center ${getStatusColor(currentStatus)}`}>
             {getStatusText(currentStatus)}
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-text-secondary">
             עודכן לאחרונה: {formatRelativeTime(lastUpdated)}
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function UpdateStatusPage() {
         </div>
         
         {/* Information Note */}
-        <div className="mt-8 text-sm text-gray-400 text-center px-4">
+        <div className="mt-8 text-sm text-text-secondary text-center px-4">
           העדכון ישלח באופן אוטומטי לכל אנשי הקשר ששמרו אותך
         </div>
       </div>

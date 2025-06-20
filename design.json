@@ -1,0 +1,112 @@
+{
+  "design_language": {
+    "direction": "rtl",
+    "theme": "warm_alert (orange primary)",
+    "mode": "light",
+    "color_palette": {
+      "primary": "#FF9900",
+      "accent": "#FF4500",
+      "background": "#FFFFFF",
+      "text_primary": "#000000",
+      "text_secondary": "#555555",
+      "alert": {
+        "warning": "#FF6600",
+        "error": "#CC0000"
+      }
+    },
+    "font": {
+      "family": "San Francisco / Segoe UI / Arial",
+      "weight": "normal to bold",
+      "size_base": "16px"
+    },
+    "icons": {
+      "style": "rounded, minimal",
+      "library": "system default or Material Symbols"
+    }
+  },
+  "layout_structure": {
+    "header": {
+      "height": "10vh",
+      "background_color": "primary",
+      "alignment": "centered",
+      "title_font_weight": "bold",
+      "icon_position": "left (RTL)"
+    },
+    "tabs_bottom_navigation": {
+      "type": "fixed",
+      "position": "bottom",
+      "highlight_color": "primary",
+      "inactive_color": "#888888",
+      "icons": true,
+      "labels": false
+    },
+    "card_list": {
+      "container": {
+        "background": "#FFFFFF",
+        "padding": "16px",
+        "border_radius": "12px",
+        "shadow": "light"
+      },
+      "item": {
+        "padding": "12px",
+        "border_bottom": "1px solid #EEE",
+        "icon_right": true,
+        "font_size": "14px",
+        "font_weight": "medium"
+      }
+    },
+    "buttons": {
+      "primary": {
+        "background": "primary",
+        "text_color": "#FFFFFF",
+        "border_radius": "999px",
+        "padding": "10px 24px"
+      },
+      "secondary": {
+        "background": "#EEEEEE",
+        "text_color": "#000000",
+        "border_radius": "999px",
+        "padding": "10px 24px"
+      }
+    },
+    "modals_and_filters": {
+      "background": "#F5F5F5",
+      "rounded_corners": true,
+      "elevation": "medium"
+    }
+  },
+  "components": {
+    "alerts": {
+      "types": ["rocket warning", "drill warning", "update"],
+      "icons": {
+        "rocket": "broadcast symbol",
+        "warning": "exclamation",
+        "info": "i"
+      },
+      "colors": {
+        "rocket": "red",
+        "drill": "orange",
+        "info": "blue"
+      },
+      "timestamp_format": "DD/MM/YYYY | HH:mm"
+    },
+    "status_bar": {
+      "background": "transparent",
+      "text_color": "black"
+    },
+    "location_selector": {
+      "type": "modal or dropdown",
+      "add_area_button": "dotted border, '+' icon",
+      "current_location_chip": {
+        "style": "pill",
+        "background": "black",
+        "text_color": "white"
+      }
+    }
+  },
+  "accessibility": {
+    "font_scaling": true,
+    "high_contrast_support": true,
+    "screen_reader_labels": true
+  }
+}

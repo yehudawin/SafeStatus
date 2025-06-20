@@ -6,23 +6,23 @@ const PrivacyPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4" dir="rtl">
+    <div className="min-h-screen bg-background text-text-primary p-4" dir="rtl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button 
           onClick={() => navigate('/')}
-          className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+          className="p-2 bg-light-surface rounded-design hover:bg-primary hover:text-white transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-2xl font-bold">מדיניות פרטיות</h1>
+        <h1 className="text-2xl font-bold text-primary">מדיניות פרטיות</h1>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-6 text-gray-300 leading-relaxed">
+      <div className="max-w-4xl mx-auto space-y-6 text-text-secondary leading-relaxed">
         
         {/* Introduction */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">מבוא</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">מבוא</h2>
           <p>
             SafeStatus ("אנחנו", "שלנו", "האפליקציה") מחויבת להגן על הפרטיות שלך. 
             מדיניות פרטיות זו מסבירה כיצד אנו אוספים, משתמשים ומגנים על המידע שלך 
@@ -31,17 +31,17 @@ const PrivacyPage: React.FC = () => {
         </section>
 
         {/* Information We Collect */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">מידע שאנו אוספים</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">מידע שאנו אוספים</h2>
           
-          <h3 className="text-lg font-medium text-emerald-400 mb-3">מידע אישי:</h3>
+          <h3 className="text-lg font-medium text-primary mb-3">מידע אישי:</h3>
           <ul className="space-y-2 mr-4">
             <li>• מספר טלפון (לצורך אימות והתחברות)</li>
             <li>• סטטוס חירום שלך ("נכנס למקלט" / "חזר לרגיל")</li>
             <li>• רשימת אנשי קשר שבחרת לשתף איתם (שמות ומספרי טלפון)</li>
           </ul>
 
-          <h3 className="text-lg font-medium text-emerald-400 mb-3 mt-6">מידע טכני:</h3>
+          <h3 className="text-lg font-medium text-primary mb-3 mt-6">מידע טכני:</h3>
           <ul className="space-y-2 mr-4">
             <li>• כתובת IP (לצורך אבטחה בלבד)</li>
             <li>• זמני שימוש באפליקציה</li>
@@ -50,8 +50,8 @@ const PrivacyPage: React.FC = () => {
         </section>
 
         {/* How We Use Information */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">כיצד אנו משתמשים במידע</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">כיצד אנו משתמשים במידע</h2>
           
           <ul className="space-y-2 mr-4">
             <li>• <strong>אימות זהות:</strong> להבטיח שרק אתה יכול לגשת לחשבון שלך</li>
@@ -63,11 +63,11 @@ const PrivacyPage: React.FC = () => {
         </section>
 
         {/* Data Sharing */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">שיתוף מידע</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">שיתוף מידע</h2>
           
-          <div className="bg-emerald-900/30 border border-emerald-600/50 p-4 rounded-lg mb-4">
-            <p className="text-emerald-400 font-medium">
+          <div className="bg-safe/10 border border-safe/50 p-4 rounded-design mb-4">
+            <p className="text-safe font-medium">
               🔒 אנו <strong>לא</strong> מוכרים, משתפים או מעבירים את המידע האישי שלך לצדדים שלישיים.
             </p>
           </div>
@@ -81,8 +81,8 @@ const PrivacyPage: React.FC = () => {
         </section>
 
         {/* Data Security */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">אבטחת מידע</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">אבטחת מידע</h2>
           
           <p className="mb-4">אנו נוקטים באמצעי אבטחה מתקדמים להגנה על המידע שלך:</p>
           
@@ -96,8 +96,8 @@ const PrivacyPage: React.FC = () => {
         </section>
 
         {/* User Rights */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">הזכויות שלך</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">הזכויות שלך</h2>
           
           <p className="mb-4">יש לך זכויות מלאות על המידע שלך:</p>
           
@@ -109,16 +109,16 @@ const PrivacyPage: React.FC = () => {
             <li>• <strong>ייצוא:</strong> להוריד עותק של כל המידע שלך</li>
           </ul>
 
-          <div className="bg-blue-900/30 border border-blue-600/50 p-4 rounded-lg mt-4">
-            <p className="text-blue-400">
+          <div className="bg-primary/10 border border-primary/50 p-4 rounded-design mt-4">
+            <p className="text-primary">
               📧 ליצירת קשר בנושא הזכויות שלך: <strong>privacy@safestatus.app</strong>
             </p>
           </div>
         </section>
 
         {/* Data Retention */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">שמירת מידע</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">שמירת מידע</h2>
           
           <ul className="space-y-2 mr-4">
             <li>• <strong>חשבון פעיל:</strong> המידע נשמר כל עוד החשבון פעיל</li>
@@ -129,8 +129,8 @@ const PrivacyPage: React.FC = () => {
         </section>
 
         {/* Cookies */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">עוגיות (Cookies)</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">עוגיות (Cookies)</h2>
           
           <p className="mb-4">
             האפליקציה משתמשת בטכנולוגיות אחסון מקומי (לא cookies מסורתיים) רק לצרכים טכניים:
@@ -144,8 +144,8 @@ const PrivacyPage: React.FC = () => {
         </section>
 
         {/* Changes to Policy */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">שינויים במדיניות</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">שינויים במדיניות</h2>
           
           <p className="mb-4">
             מדיניות פרטיות זו עלולה להתעדכן מעת לעת. במקרה של שינויים מהותיים:
@@ -159,12 +159,12 @@ const PrivacyPage: React.FC = () => {
         </section>
 
         {/* Contact */}
-        <section className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">יצירת קשר</h2>
+        <section className="card-design">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">יצירת קשר</h2>
           
           <p className="mb-4">לשאלות, הצעות או חששות בנושא פרטיות:</p>
           
-          <div className="bg-gray-700 p-4 rounded-lg space-y-2">
+          <div className="bg-light-surface p-4 rounded-design space-y-2">
             <p>📧 <strong>אימייל:</strong> privacy@safestatus.app</p>
             <p>🌐 <strong>אתר:</strong> https://safestatus.vercel.app</p>
             <p>📱 <strong>טלפון:</strong> נשמח לעזור דרך האפליקציה</p>
@@ -172,7 +172,7 @@ const PrivacyPage: React.FC = () => {
         </section>
 
         {/* Footer */}
-        <div className="text-center text-gray-500 pt-8 border-t border-gray-700">
+        <div className="text-center text-text-secondary pt-8 border-t border-gray-200">
           {/* מומלץ לעדכן תאריך זה באופן ידני בעת שינוי מהותי במדיניות */}
           <p>מדיניות פרטיות זו עודכנה לאחרונה: 29 ביולי 2024</p>
           <p className="mt-2">SafeStatus © 2024 - כל הזכויות שמורות</p>

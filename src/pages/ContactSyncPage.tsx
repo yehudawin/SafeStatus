@@ -145,23 +145,23 @@ export default function ContactSyncPage() {
 
   if (step === 'request') {
     return (
-      <div className="min-h-screen bg-dark">
+      <div className="min-h-screen bg-background">
         <Header 
           title="סנכרון אנשי קשר" 
           showBack 
           onBack={() => navigate('/')}
         />
         
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 mt-16">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 mt-20">
           <div className="mb-8 flex justify-center">
-            <div className="bg-blue-600 bg-opacity-20 rounded-full p-6">
-              <Contact className="text-blue-500" size={80} />
+            <div className="bg-primary bg-opacity-20 rounded-full p-6">
+              <Contact className="text-primary" size={80} />
             </div>
           </div>
           
-          <h1 className="text-2xl font-bold mb-4 text-center">סנכרון אנשי קשר</h1>
+          <h1 className="text-2xl font-bold mb-4 text-center text-text-primary">סנכרון אנשי קשר</h1>
           
-          <p className="text-center text-gray-300 mb-8 leading-relaxed">
+          <p className="text-center text-text-secondary mb-8 leading-relaxed">
             כדי להתחיל להשתמש באפליקציה, נצטרך לסנכרן את רשימת אנשי הקשר שלך מהטלפון.
             <br /><br />
             לאחר מכן תוכל לבחור בדיוק עם מי אתה רוצה לשתף את הסטטוס שלך.
@@ -170,15 +170,15 @@ export default function ContactSyncPage() {
           <button
             onClick={requestContactsPermission}
             disabled={loading}
-            className="bg-blue-600 w-full py-4 rounded-lg text-lg font-bold mb-6 flex items-center justify-center disabled:opacity-50"
+            className="button-primary w-full py-4 text-lg font-bold mb-6 flex items-center justify-center disabled:opacity-50 hover:bg-opacity-90 transition-colors"
           >
             <Contact className="ml-2" size={20} />
             סנכרן אנשי קשר מהטלפון
           </button>
           
-          <div className="bg-green-600/10 border border-green-600/30 rounded-lg p-4 mb-6">
-            <h3 className="font-medium mb-2 text-green-400">מה קורה עכשיו?</h3>
-            <ul className="text-sm text-green-300 space-y-1">
+          <div className="bg-safe/10 border border-safe/30 rounded-design p-4 mb-6">
+            <h3 className="font-medium mb-2 text-safe">מה קורה עכשיו?</h3>
+            <ul className="text-sm text-safe space-y-1">
               <li>• נקרא את רשימת אנשי הקשר שלך</li>
               <li>• תבחר מי מהם יקבל את הסטטוס שלך</li>
               <li>• רק בחירה הדדית תאפשר לראות סטטוסים</li>
@@ -187,7 +187,7 @@ export default function ContactSyncPage() {
 
           <button
             onClick={handleSkip}
-            className="text-gray-400 text-sm py-2 hover:underline"
+            className="text-text-secondary text-sm py-2 hover:underline"
           >
             דלג לבינתיים (תוכל להגדיר מאוחר יותר)
           </button>
@@ -198,13 +198,13 @@ export default function ContactSyncPage() {
 
   if (step === 'syncing') {
     return (
-      <div className="min-h-screen bg-dark">
+      <div className="min-h-screen bg-background">
         <Header title="סנכרון אנשי קשר" />
         
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 mt-16">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mb-6"></div>
-          <h2 className="text-xl font-bold mb-2">מסנכרן אנשי קשר...</h2>
-          <p className="text-gray-400 text-center">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 mt-20">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mb-6"></div>
+          <h2 className="text-xl font-bold mb-2 text-text-primary">מסנכרן אנשי קשר...</h2>
+          <p className="text-text-secondary text-center">
             קורא את רשימת אנשי הקשר שלך מהטלפון
           </p>
         </div>
@@ -213,22 +213,22 @@ export default function ContactSyncPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark">
+    <div className="min-h-screen bg-background">
       <Header 
         title="בחירת אנשי קשר" 
         showBack 
         onBack={() => setStep('request')}
       />
       
-      <div className="p-4 mt-16 pb-28"> {/* Padding bottom for the fixed footer */}
+      <div className="p-4 mt-20 pb-28"> {/* Padding bottom for the fixed footer */}
         
-        <div className="bg-dark-surface rounded-lg p-4 mb-4">
+        <div className="card-design mb-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold flex items-center">
+            <h2 className="text-lg font-bold flex items-center text-text-primary">
               <Users className="ml-2" size={20} />
               נמצאו {contacts.length} אנשי קשר
             </h2>
-            <span className="text-blue-400 font-medium">
+            <span className="text-primary font-medium">
               נבחרו: {selectedCount}
             </span>
           </div>
@@ -236,7 +236,7 @@ export default function ContactSyncPage() {
           <div className="flex gap-3">
             <button
               onClick={handleSelectAll}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 flex items-center"
+              className="button-primary text-sm hover:bg-opacity-90 transition-colors flex items-center"
             >
               <CheckSquare className="ml-1" size={16} />
               בחר הכל
@@ -250,10 +250,10 @@ export default function ContactSyncPage() {
             placeholder="חפש איש קשר..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full p-3 pl-10 bg-dark-card border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+            className="w-full p-3 pl-10 bg-light-surface border border-gray-300 rounded-design text-text-primary placeholder-text-secondary focus:border-primary focus:outline-none"
           />
           <div className="absolute left-3 top-1/2 -translate-y-1/2">
-            <Search className="text-gray-400" size={20} />
+            <Search className="text-text-secondary" size={20} />
           </div>
         </div>
 
@@ -262,34 +262,34 @@ export default function ContactSyncPage() {
             <div
               key={contact.id}
               onClick={() => handleContactToggle(contact.id, contact.is_selected)}
-              className="bg-dark-card rounded-lg p-4 flex items-center justify-between cursor-pointer hover:bg-gray-700 transition-colors"
+              className="card-design flex items-center justify-between cursor-pointer hover:shadow-medium transition-all duration-200"
             >
               <div className="flex flex-col">
-                <span className="font-medium">{contact.contact_name}</span>
-                <span className="text-sm text-gray-400">{contact.contact_phone}</span>
+                <span className="font-medium text-text-primary">{contact.contact_name}</span>
+                <span className="text-sm text-text-secondary">{contact.contact_phone}</span>
               </div>
               
               {contact.is_selected ? (
-                <CheckSquare className="text-blue-500" size={24} />
+                <CheckSquare className="text-primary" size={24} />
               ) : (
-                <Square className="text-gray-500" size={24} />
+                <Square className="text-text-secondary" size={24} />
               )}
             </div>
           ))}
 
           {filteredContacts.length === 0 && (
-            <div className="text-center py-8 text-gray-400">
+            <div className="text-center py-8 text-text-secondary">
               <p>{searchTerm ? 'לא נמצאו אנשי קשר התואמים לחיפוש.' : 'לא נמצאו אנשי קשר מסונכרנים.'}</p>
             </div>
           )}
         </div>
       </div>
       
-      <div className="fixed bottom-0 left-0 w-full bg-dark-surface p-4 border-t border-gray-700 shadow-lg">
+      <div className="fixed bottom-0 left-0 w-full bg-card-background p-4 border-t border-gray-200 shadow-medium">
         <button
           onClick={handleFinish}
           disabled={selectedCount === 0}
-          className="w-full bg-green-600 text-white py-3 rounded-lg text-lg font-bold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-safe text-white py-3 rounded-pill text-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
         >
           <UserCheck className="ml-2" size={20} />
           סיים ושמור בחירה ({selectedCount})

@@ -12,32 +12,33 @@ export default function StatusButton({ statusType, onClick, disabled = false }: 
     shelter: {
       icon: Shield,
       text: 'נכנסתי למרחב מוגן',
-      bgColor: 'bg-shelter bg-opacity-20',
-      borderColor: 'border-shelter',
-      textColor: 'text-shelter'
+      bgColor: 'bg-warning',
+      textColor: 'text-white',
+      hoverColor: 'hover:bg-opacity-90'
     },
     safe: {
       icon: CheckCircle,
       text: 'חזרתי לשגרה',
-      bgColor: 'bg-safe bg-opacity-20',
-      borderColor: 'border-safe',
-      textColor: 'text-safe'
+      bgColor: 'bg-safe',
+      textColor: 'text-white',
+      hoverColor: 'hover:bg-opacity-90'
     }
   }
   
-  const { icon: Icon, text, bgColor, borderColor, textColor } = config[statusType]
+  const { icon: Icon, text, bgColor, textColor, hoverColor } = config[statusType]
   
   return (
     <button
       onClick={() => onClick(statusType as UserStatus)}
       disabled={disabled}
       className={`
-        w-full ${bgColor} border-2 ${borderColor} rounded-xl p-8 
-        flex flex-col items-center transition-transform 
+        w-full ${bgColor} ${textColor} rounded-design p-8 
+        flex flex-col items-center transition-all duration-200
         active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
+        ${hoverColor} shadow-light hover:shadow-medium
       `}
     >
-      <Icon className={`text-5xl mb-6 ${textColor}`} size={80} />
+      <Icon className="text-5xl mb-6" size={80} />
       <span className="text-xl font-bold">{text}</span>
     </button>
   )

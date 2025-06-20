@@ -11,9 +11,9 @@ export const TWILIO_CONFIG = {
   TEST_OTP: '123456',
   
   // Twilio settings (will be set via environment variables)
-  ACCOUNT_SID: process.env.VITE_TWILIO_ACCOUNT_SID,
-  AUTH_TOKEN: process.env.VITE_TWILIO_AUTH_TOKEN,
-  PHONE_NUMBER: process.env.VITE_TWILIO_PHONE_NUMBER
+  ACCOUNT_SID: import.meta.env.VITE_TWILIO_ACCOUNT_SID,
+  AUTH_TOKEN: import.meta.env.VITE_TWILIO_AUTH_TOKEN,
+  PHONE_NUMBER: import.meta.env.VITE_TWILIO_PHONE_NUMBER
 }
 
 export const normalizePhoneNumber = (phone: string): string => {

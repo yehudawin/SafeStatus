@@ -83,14 +83,14 @@ export default function HomePage() {
     }
   }, [userPhone])
   
-    if (loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-dark pb-24">
+      <div className="min-h-screen bg-background pb-24">
         <Header title="מצב החברים שלי" />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-400">טוען אנשי קשר...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-text-secondary">טוען אנשי קשר...</p>
           </div>
         </div>
       </div>
@@ -99,14 +99,14 @@ export default function HomePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-dark pb-24">
+      <div className="min-h-screen bg-background pb-24">
         <Header title="מצב החברים שלי" />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
-            <p className="text-red-400 mb-4">{error}</p>
+            <p className="text-error mb-4">{error}</p>
             <button
               onClick={handleRefresh}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              className="button-primary hover:bg-opacity-90 transition-colors"
             >
               נסה שוב
             </button>
@@ -117,7 +117,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <Header
         title="מצב החברים שלי"
         showRefresh
@@ -130,19 +130,21 @@ export default function HomePage() {
       />
       
       {/* Status Summary */}
-      <div className="mt-16 p-4 bg-dark-surface mx-4 rounded-lg">
-        <div className="flex justify-between items-center">
-          <div className="text-center cursor-pointer" onClick={() => document.getElementById('shelter-section')?.scrollIntoView({ behavior: 'smooth' })}>
-            <div className="text-shelter text-2xl font-bold">{grouped.shelter.length}</div>
-            <div className="text-xs">במרחב מוגן</div>
-          </div>
-          <div className="text-center cursor-pointer" onClick={() => document.getElementById('safe-section')?.scrollIntoView({ behavior: 'smooth' })}>
-            <div className="text-safe text-2xl font-bold">{grouped.safe.length}</div>
-            <div className="text-xs">בטוחים</div>
-          </div>
-          <div className="text-center cursor-pointer" onClick={() => document.getElementById('none-section')?.scrollIntoView({ behavior: 'smooth' })}>
-            <div className="text-no-update text-2xl font-bold">{grouped.none.length}</div>
-            <div className="text-xs">לא עדכנו</div>
+      <div className="mt-20 px-4">
+        <div className="card-design">
+          <div className="flex justify-between items-center">
+            <div className="text-center cursor-pointer" onClick={() => document.getElementById('shelter-section')?.scrollIntoView({ behavior: 'smooth' })}>
+              <div className="text-shelter text-2xl font-bold">{grouped.shelter.length}</div>
+              <div className="text-xs text-text-secondary">במרחב מוגן</div>
+            </div>
+            <div className="text-center cursor-pointer" onClick={() => document.getElementById('safe-section')?.scrollIntoView({ behavior: 'smooth' })}>
+              <div className="text-safe text-2xl font-bold">{grouped.safe.length}</div>
+              <div className="text-xs text-text-secondary">בטוחים</div>
+            </div>
+            <div className="text-center cursor-pointer" onClick={() => document.getElementById('none-section')?.scrollIntoView({ behavior: 'smooth' })}>
+              <div className="text-no-update text-2xl font-bold">{grouped.none.length}</div>
+              <div className="text-xs text-text-secondary">לא עדכנו</div>
+            </div>
           </div>
         </div>
       </div>
@@ -152,13 +154,13 @@ export default function HomePage() {
         {/* No contacts message */}
         {contacts.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-400 mb-4">עדיין לא סנכרנת אנשי קשר</p>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-text-secondary mb-4">עדיין לא סנכרנת אנשי קשר</p>
+            <p className="text-text-secondary text-sm mb-6">
               כדי לראות את הסטטוס של החברים שלך, תחילה צריך לסנכרן אנשי קשר מהטלפון
             </p>
             <button
               onClick={() => navigate('/contact-sync')}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+              className="button-primary hover:bg-opacity-90 transition-colors"
             >
               סנכרן אנשי קשר
             </button>
@@ -172,11 +174,11 @@ export default function HomePage() {
               במרחב מוגן
             </h2>
             {grouped.shelter.map((contact) => (
-              <div key={contact.phone} className="bg-dark-card rounded-lg p-4 mb-2 border-r-4 border-shelter">
+              <div key={contact.phone} className="card-design mb-2 border-r-4 border-shelter">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-medium">{contact.name}</h3>
-                    <div className="text-xs text-gray-400 flex items-center mt-1">
+                    <h3 className="font-medium text-text-primary">{contact.name}</h3>
+                    <div className="text-xs text-text-secondary flex items-center mt-1">
                       {formatRelativeTime(contact.last_updated)}
                     </div>
                   </div>
@@ -193,11 +195,11 @@ export default function HomePage() {
               בטוחים
             </h2>
             {grouped.safe.map((contact) => (
-              <div key={contact.phone} className="bg-dark-card rounded-lg p-4 mb-2 border-r-4 border-safe">
+              <div key={contact.phone} className="card-design mb-2 border-r-4 border-safe">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-medium">{contact.name}</h3>
-                    <div className="text-xs text-gray-400 flex items-center mt-1">
+                    <h3 className="font-medium text-text-primary">{contact.name}</h3>
+                    <div className="text-xs text-text-secondary flex items-center mt-1">
                       {formatRelativeTime(contact.last_updated)}
                     </div>
                   </div>
@@ -210,15 +212,15 @@ export default function HomePage() {
         {/* Not Updated Friends */}
         {grouped.none.length > 0 && (
           <div id="none-section" className="mb-6">
-            <h2 className="text-gray-400 font-bold mb-2 flex items-center">
+            <h2 className="text-text-secondary font-bold mb-2 flex items-center">
               לא עדכנו סטטוס
             </h2>
             {grouped.none.map((contact) => (
-              <div key={contact.phone} className="bg-dark-card rounded-lg p-4 mb-2 border-r-4 border-gray-500">
+              <div key={contact.phone} className="card-design mb-2 border-r-4 border-text-secondary">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-medium">{contact.name}</h3>
-                    <div className="text-xs text-gray-400 flex items-center mt-1">
+                    <h3 className="font-medium text-text-primary">{contact.name}</h3>
+                    <div className="text-xs text-text-secondary flex items-center mt-1">
                       עוד לא עדכנו
                     </div>
                   </div>
@@ -232,7 +234,7 @@ export default function HomePage() {
       {/* Floating Action Button */}
       <button
         onClick={() => navigate('/update-status')}
-        className="fixed bottom-6 left-6 bg-blue-600 text-white w-16 h-16 rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+        className="fixed bottom-6 left-6 bg-primary text-white w-16 h-16 rounded-full shadow-medium hover:shadow-lg hover:bg-opacity-90 transition-all duration-200 flex items-center justify-center"
         aria-label="עדכן מצב"
       >
         <PenSquare size={28} />

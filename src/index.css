@@ -4,8 +4,10 @@
 
 /* RTL Support */
 body {
-  font-family: 'Inter', 'Heebo', sans-serif;
+  font-family: 'San Francisco', 'Segoe UI', 'Arial', sans-serif;
   direction: rtl;
+  background-color: #FFFFFF;
+  color: #000000;
 }
 
 /* Custom scrollbar hidden */
@@ -21,6 +23,24 @@ html, body {
 /* Base styles */
 @layer base {
   body {
-    @apply bg-dark text-white;
+    @apply bg-background text-text-primary font-sf;
+  }
+  
+  /* Header height from design system */
+  .header-height {
+    height: 10vh;
+  }
+  
+  /* Design system components */
+  .card-design {
+    @apply bg-card-background p-4 rounded-design shadow-light;
+  }
+  
+  .button-primary {
+    @apply bg-primary text-white rounded-pill px-6 py-3 font-medium;
+  }
+  
+  .button-secondary {
+    @apply bg-light-surface text-text-primary rounded-pill px-6 py-3 font-medium;
   }
 } 
