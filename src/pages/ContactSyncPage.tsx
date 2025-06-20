@@ -25,20 +25,31 @@ export default function ContactSyncPage() {
     ), [contacts, searchTerm])
 
   const loadSyncedContacts = async () => {
-    if (!userPhone) return
+    if (!userPhone) {
+      logError('No userPhone available in loadSyncedContacts', { userPhone })
+      return
+    }
     
     try {
+      logError('Loading existing synced contacts', { userPhone })
       const result = await getUserContacts(userPhone)
+      logError('Load synced contacts result', result)
+      
       if (result.success && result.data) {
         setContacts(result.data)
         setSelectedCount(result.data.filter(c => c.is_selected).length)
         
         if (result.data.length > 0) {
+          logError('Found existing contacts, switching to selecting step', { contactsCount: result.data.length })
           setStep('selecting')
+        } else {
+          logError('No existing contacts found, staying on request step', null)
         }
+      } else {
+        logError('Failed to load synced contacts', result)
       }
     } catch (error) {
-      logError('Error loading synced contacts', error)
+      logError('Exception in loadSyncedContacts', error)
       if (import.meta.env.DEV) {
         console.error('Error loading synced contacts:', error)
       }
@@ -53,10 +64,16 @@ export default function ContactSyncPage() {
     setLoading(true)
     
     try {
+      logError('Starting contacts permission request', { userPhone, isSupported: isContactsSupported() })
+      
       // בקש הרשאה לגישה לאנשי קשר (רק במכשיר נייד)
       if (isContactsSupported()) {
+        logError('Requesting permission for native platform', null)
         const permissionResult = await requestPermission()
+        logError('Permission result received', permissionResult)
+        
         if (!permissionResult.granted) {
+          logError('Permission denied', permissionResult)
           toast.error(permissionResult.message)
           setStep('request')
           setLoading(false)
@@ -64,6 +81,7 @@ export default function ContactSyncPage() {
         }
         toast.success(permissionResult.message)
       } else {
+        logError('Using mock data for web/non-native platform', null)
         toast.warning('שימוש בנתוני הדמיה', {
           description: 'גישה לאנשי קשר אמיתיים זמינה רק באפליקציית הנייד.',
           duration: 3000,
@@ -74,34 +92,42 @@ export default function ContactSyncPage() {
       await new Promise(resolve => setTimeout(resolve, 1000))
       
       // קבל את אנשי הקשר מהמכשיר או נתוני הדמיה
+      logError('Getting device contacts', null)
       const contactsResult = await getDeviceContacts()
+      logError('Device contacts result', contactsResult)
       
       if (!contactsResult.success || !contactsResult.contacts) {
+        logError('Failed to get device contacts', contactsResult)
         toast.error(contactsResult.error || 'שגיאה בקריאת אנשי קשר')
         setStep('request')
         return
       }
 
       if (!userPhone) {
+        logError('No user phone available', { userPhone })
         toast.error('שגיאה בזיהוי המשתמש')
         setStep('request')
         return
       }
 
       // סנכרן את אנשי הקשר לדאטה בייס
+      logError('Syncing contacts to database', { userPhone, contactsCount: contactsResult.contacts.length })
       const result = await syncPhoneContacts(userPhone, contactsResult.contacts)
+      logError('Sync result from database', result)
       
       if (result.success && result.data) {
         setContacts(result.data)
         setStep('selecting')
         const platformMessage = isContactsSupported() ? 'מהמכשיר' : '(נתוני הדמיה)'
+        logError('Contacts synced successfully', { syncedCount: result.data.length })
         toast.success(`סונכרנו ${result.data.length} אנשי קשר ${platformMessage}`)
       } else {
+        logError('Failed to sync contacts to database', result)
         toast.error(result.error || 'שגיאה בסנכרון אנשי הקשר')
         setStep('request')
       }
     } catch (error) {
-      logError('Error in requestContactsPermission', error)
+      logError('Exception in requestContactsPermission', error)
       if (import.meta.env.DEV) {
         console.error('Error in requestContactsPermission:', error)
       }
