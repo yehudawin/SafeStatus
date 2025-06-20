@@ -4,10 +4,10 @@ import { supabase } from '@/supabase/client'
 import { isTestNumber, normalizePhoneNumber, formatPhoneForDisplay, TWILIO_CONFIG } from '@/utils/twilioConfig'
 
 interface LoginPageProps {
-  onLogin: (userPhone: string) => void
+  // Removed onLogin since it's not used
 }
 
-export default function LoginPage({ onLogin }: LoginPageProps) {
+export default function LoginPage({}: LoginPageProps = {}) {
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
@@ -175,8 +175,30 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       // Handle test numbers
       if (authMethod === 'phone' && isTestNumber(phone)) {
         if (token === TWILIO_CONFIG.TEST_OTP) {
+          // For test numbers, create a manual session
+          const testUser = {
+            id: 'test-user-' + Date.now(),
+            phone: phone,
+            email: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            email_confirmed_at: null,
+            phone_confirmed_at: new Date().toISOString(),
+            last_sign_in_at: new Date().toISOString()
+          }
+          
+          // Set a mock session in localStorage for test mode
+          localStorage.setItem('supabase.auth.token', JSON.stringify({
+            access_token: 'test-token',
+            refresh_token: 'test-refresh',
+            user: testUser,
+            expires_at: Date.now() + 3600000 // 1 hour
+          }))
+          
           toast.success('התחברת בהצלחה! (מצב בדיקה)')
-          onLogin(phone)
+          
+          // Trigger auth state change by reloading
+          window.location.reload()
           return
         } else {
           toast.error(`קוד אימות שגוי. לבדיקות השתמש בקוד: ${TWILIO_CONFIG.TEST_OTP}`)
@@ -204,8 +226,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       }
 
       toast.success('התחברת בהצלחה!')
-      // Use phone number or email as identifier
-      onLogin(authMethod === 'phone' ? phone : email)
+      // AuthContext will handle the navigation automatically
 
     } catch (error) {
       console.error('Error verifying OTP:', error)
@@ -233,37 +254,37 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-dark flex items-center justify-center px-6">
+    <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         {/* App Logo/Title */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">SafeStatus</h1>
-          <p className="text-gray-400">עדכון מצב במצבי חירום</p>
+          <h1 className="text-3xl font-bold text-primary mb-2">SafeStatus</h1>
+          <p className="text-text-secondary">עדכון מצב במצבי חירום</p>
         </div>
 
         {!isOtpSent ? (
           /* Login Input Screen */
-          <div className="bg-dark-surface rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 text-center">התחברות</h2>
+          <div className="card-design">
+            <h2 className="text-xl font-semibold mb-4 text-center text-text-primary">התחברות</h2>
             
             {/* Auth Method Toggle */}
-            <div className="flex bg-dark-card rounded-lg p-1 mb-4">
+            <div className="flex bg-light-surface rounded-pill p-1 mb-4">
               <button
                 onClick={() => setAuthMethod('phone')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 px-4 rounded-pill text-sm font-medium transition-colors ${
                   authMethod === 'phone' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-primary text-white' 
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 טלפון
               </button>
               <button
                 onClick={() => setAuthMethod('email')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 px-4 rounded-pill text-sm font-medium transition-colors ${
                   authMethod === 'email' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-primary text-white' 
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 דוא"ל
@@ -272,31 +293,31 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
             {authMethod === 'phone' ? (
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">מספר טלפון</label>
+                <label className="block text-sm font-medium mb-2 text-text-primary">מספר טלפון</label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={handlePhoneChange}
                   placeholder="05X-XXX-XXXX"
-                  className="w-full p-3 bg-dark-card border border-gray-600 rounded-lg text-white text-right focus:border-blue-500 focus:outline-none"
+                  className="w-full p-3 bg-light-surface border border-gray-300 rounded-design text-text-primary text-right focus:border-primary focus:outline-none"
                   dir="ltr"
                 />
-                <p className="text-xs text-gray-400 mt-1 text-right">
+                <p className="text-xs text-text-secondary mt-1 text-right">
                   הכנס מספר טלפון ישראלי תקין
                 </p>
               </div>
             ) : (
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">כתובת דוא"ל</label>
+                <label className="block text-sm font-medium mb-2 text-text-primary">כתובת דוא"ל</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your-email@example.com"
-                  className="w-full p-3 bg-dark-card border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full p-3 bg-light-surface border border-gray-300 rounded-design text-text-primary focus:border-primary focus:outline-none"
                   dir="ltr"
                 />
-                <p className="text-xs text-gray-400 mt-1 text-right">
+                <p className="text-xs text-text-secondary mt-1 text-right">
                   הכנס כתובת דוא"ל תקינה
                 </p>
               </div>
@@ -305,34 +326,34 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <button
               onClick={sendOtp}
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white p-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="button-primary w-full hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? 'שולח...' : 'שלח קוד אימות'}
             </button>
 
-            <div className="mt-4 text-xs text-gray-400 text-center">
+            <div className="mt-4 text-xs text-text-secondary text-center">
               בלחיצה על "שלח קוד אימות" אתה מסכים לתנאי השימוש ו
-              <a href="/privacy" className="text-blue-400 hover:underline">מדיניות הפרטיות</a>
+              <a href="/privacy" className="text-primary hover:underline">מדיניות הפרטיות</a>
             </div>
           </div>
         ) : (
           /* OTP Verification Screen */
-          <div className="bg-dark-surface rounded-lg p-6">
+          <div className="card-design">
             <div className="text-center mb-4">
-              <h2 className="text-xl font-semibold mb-2">הכנס קוד אימות</h2>
-              <p className="text-gray-400 text-sm">
+              <h2 className="text-xl font-semibold mb-2 text-text-primary">הכנס קוד אימות</h2>
+              <p className="text-text-secondary text-sm">
                 נשלח קוד אימות ל{authMethod === 'phone' ? `מספר ${phone}` : `דוא"ל ${email}`}
               </p>
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">קוד אימות</label>
+              <label className="block text-sm font-medium mb-2 text-text-primary">קוד אימות</label>
               <input
                 type="text"
                 value={otp}
                 onChange={handleOtpChange}
                 placeholder="123456"
-                className="w-full p-3 bg-dark-card border border-gray-600 rounded-lg text-white text-center text-2xl tracking-widest focus:border-blue-500 focus:outline-none"
+                className="w-full p-3 bg-light-surface border border-gray-300 rounded-design text-text-primary text-center text-2xl tracking-widest focus:border-primary focus:outline-none"
                 maxLength={6}
                 dir="ltr"
               />
@@ -341,14 +362,14 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <button
               onClick={() => verifyOtp(otp)}
               disabled={isLoading || otp.length !== 6}
-              className="w-full bg-blue-600 text-white p-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+              className="button-primary w-full hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed mb-3 transition-colors"
             >
               {isLoading ? 'מאמת...' : 'אמת קוד'}
             </button>
 
             <div className="text-center">
               {countdown > 0 ? (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-text-secondary">
                   ניתן לשלוח קוד חדש בעוד {countdown} שניות
                 </p>
               ) : (
@@ -359,7 +380,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     }
                   }}
                   disabled={isLoading}
-                  className="text-blue-400 text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-primary text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   שלח קוד אימות חדש
                 </button>

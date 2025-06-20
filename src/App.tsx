@@ -13,26 +13,35 @@ import NotFoundPage from '@/pages/NotFoundPage'
 function AppContent() {
   const { user, loading } = useAuth()
 
+  console.log('AppContent: user:', user, 'loading:', loading)
+
   if (loading) {
+    console.log('AppContent: Still loading, showing spinner')
     return (
-      <div className="min-h-screen bg-dark text-white font-heebo flex items-center justify-center">
+      <div className="min-h-screen bg-background text-text-primary font-sf flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-400">טוען...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-text-secondary">טוען...</p>
         </div>
       </div>
     )
   }
 
+  if (!user) {
+    console.log('AppContent: No user, showing LoginPage')
+  } else {
+    console.log('AppContent: User exists, showing protected routes')
+  }
+
   return (
-    <div className="min-h-screen bg-dark text-white font-heebo">
+    <div className="min-h-screen bg-background text-text-primary font-sf">
       <Routes>
         {/* Public routes */}
         <Route path="/privacy" element={<PrivacyPage />} />
         
         {/* Protected routes */}
         {!user ? (
-          <Route path="*" element={<LoginPage onLogin={() => {}} />} />
+          <Route path="*" element={<LoginPage />} />
         ) : (
           <>
             <Route path="/" element={<HomePage />} />
@@ -50,7 +59,7 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AppContent />
         
         {/* Toast notifications */}
