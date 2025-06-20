@@ -13,7 +13,7 @@ import type { UserStatus } from '@/types'
 export default function UpdateStatusPage() {
   const navigate = useNavigate()
   const { userPhone, loading: authLoading } = useAuth()
-  const { logError, logUserAction } = useLogger()
+  const { logInfo, logError, logUserAction } = useLogger()
   const [currentStatus, setCurrentStatus] = useState<UserStatus>('none')
   const [lastUpdated, setLastUpdated] = useState(new Date().toISOString())
   const [isUpdating, setIsUpdating] = useState(false)
@@ -50,6 +50,7 @@ export default function UpdateStatusPage() {
     setIsUpdating(true)
     
     try {
+      logInfo(`Attempting to update status for ${userPhone} to ${newStatus}`)
       const result = await updateUserStatus(userPhone, newStatus)
       
       if (result.success) {
@@ -66,11 +67,21 @@ export default function UpdateStatusPage() {
         const errorMessage = result.error || 'שגיאה בעדכון הסטטוס'
         toast.error(errorMessage)
         logError('Status update failed', result.error)
+        
+        // Log more details for debugging
+        if (import.meta.env.DEV) {
+          console.error('Status update failed:', result.error)
+        }
       }
     } catch (error) {
       const errorMessage = 'שגיאה בחיבור לשרת'
       toast.error(errorMessage)
       logError('Status update exception', error)
+      
+      // Log more details for debugging
+      if (import.meta.env.DEV) {
+        console.error('Status update exception:', error)
+      }
     } finally {
       setIsUpdating(false)
     }

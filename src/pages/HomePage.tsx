@@ -124,7 +124,7 @@ export default function HomePage() {
         showContacts
         showLogout
         onRefresh={handleRefresh}
-        onContacts={() => navigate('/contact-sync')}
+        onContacts={() => navigate('/contacts')}
         onLogout={handleLogout}
         isRefreshing={isRefreshing}
       />
@@ -159,7 +159,7 @@ export default function HomePage() {
               כדי לראות את הסטטוס של החברים שלך, תחילה צריך לסנכרן אנשי קשר מהטלפון
             </p>
             <button
-              onClick={() => navigate('/contact-sync')}
+              onClick={() => navigate('/contacts')}
               className="button-primary hover:bg-opacity-90 transition-colors"
             >
               סנכרן אנשי קשר

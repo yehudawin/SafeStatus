@@ -125,3 +125,45 @@ ios/App/App/public/
 
 # Local logs from our logger
 *.log
+
+# Android build files
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/gradle.properties.bak
+
+# Keystore files (חשוב מאוד!)
+*.keystore
+*.jks
+key.properties
+
+# Generated APK/AAB files for testing
+android/app/build/outputs/
+*.apk
+*.aab
+app-release.aab
+app-debug.apk
+
+# Store assets (generated)
+safestatus-screenshot-*.png
+safestatus-feature-graphic.png
+safestatus-icon-*.png
+
+# Temporary files created for store preparation
+create-screenshots.html
+create-feature-graphic.html
+privacy-policy.html
+terms-of-service.html
+
+# Java/Gradle temporary files
+*.class
+*.jar
+*.war
+*.ear
+.gradle/
+/build/
+
+# Gradle Wrapper (keep gradlew but ignore jar)
+!gradle/wrapper/gradle-wrapper.properties
+gradle/wrapper/gradle-wrapper.jar

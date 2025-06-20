@@ -15,9 +15,28 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 // Direct API functions
 export const updateUserStatus = async (phone: string, status: UserStatus): Promise<ApiResponse<User>> => {
   try {
+    // First ensure user exists
+    const userCheck = await getUserByPhone(phone)
+    if (!userCheck.success) {
+      // Create user if doesn't exist
+      const { error: createError } = await supabase
+        .from('users')
+        .insert({ 
+          phone, 
+          status: 'none',
+          last_updated: new Date().toISOString(),
+          verified: false,
+          join_date: new Date().toISOString()
+        })
+
+      if (createError) throw createError
+    }
+
+    // Now update the status
     const { data, error } = await supabase
       .from('users')
-      .upsert({ phone, status, last_updated: new Date().toISOString() })
+      .update({ status, last_updated: new Date().toISOString() })
+      .eq('phone', phone)
       .select()
       .single()
 
