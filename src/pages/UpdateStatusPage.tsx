@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+
 import Header from '@/components/Header'
 import StatusButton from '@/components/StatusButton'
 import { useAuth } from '@/contexts/AuthContext'
 import { updateUserStatus, getUserByPhone } from '@/supabase/client'
 import { getStatusText, getStatusColor, formatRelativeTime } from '@/types'
+import { useLogger } from '@/utils/useLogger'
 import type { UserStatus } from '@/types'
 
 export default function UpdateStatusPage() {
   const navigate = useNavigate()
-  const { userPhone } = useAuth()
+  const { userPhone, loading: authLoading } = useAuth()
+  const { logError, logUserAction } = useLogger()
   const [currentStatus, setCurrentStatus] = useState<UserStatus>('none')
   const [lastUpdated, setLastUpdated] = useState(new Date().toISOString())
   const [isUpdating, setIsUpdating] = useState(false)
@@ -27,15 +30,23 @@ export default function UpdateStatusPage() {
         setLastUpdated(result.data.last_updated)
       }
     } catch (error) {
-      console.error('Error loading current status:', error)
+      logError('Error loading current status', error)
+      if (import.meta.env.DEV) {
+        console.error('Error loading current status:', error)
+      }
     } finally {
       setLoading(false)
     }
   }
 
   const handleStatusUpdate = async (newStatus: UserStatus) => {
-    if (!userPhone) return
+    if (!userPhone) {
+      toast.error('עליך להתחבר קודם כדי לעדכן סטטוס')
+      navigate('/login')
+      return
+    }
     
+    logUserAction(`Status update attempt: ${newStatus}`)
     setIsUpdating(true)
     
     try {
@@ -45,28 +56,39 @@ export default function UpdateStatusPage() {
         setCurrentStatus(newStatus)
         setLastUpdated(new Date().toISOString())
         toast.success('הסטטוס עודכן בהצלחה!')
+        logUserAction(`Status updated successfully: ${newStatus}`)
         
         // Haptic feedback if available
         if (navigator.vibrate) {
           navigator.vibrate(100)
         }
       } else {
-        toast.error(result.error || 'שגיאה בעדכון הסטטוס')
+        const errorMessage = result.error || 'שגיאה בעדכון הסטטוס'
+        toast.error(errorMessage)
+        logError('Status update failed', result.error)
       }
     } catch (error) {
-      toast.error('שגיאה בחיבור לשרת')
+      const errorMessage = 'שגיאה בחיבור לשרת'
+      toast.error(errorMessage)
+      logError('Status update exception', error)
     } finally {
       setIsUpdating(false)
     }
   }
   
   useEffect(() => {
-    if (userPhone) {
+    if (!authLoading) {
+      if (!userPhone) {
+        toast.error('עליך להתחבר קודם כדי לעדכן סטטוס')
+        navigate('/login')
+        return
+      }
       loadCurrentStatus()
     }
-  }, [userPhone])
+  }, [userPhone, authLoading, logError])
   
-  if (loading) {
+  // Show loading while auth is loading
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
         <Header
@@ -77,7 +99,33 @@ export default function UpdateStatusPage() {
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-text-secondary">טוען מצב נוכחי...</p>
+            <p className="mt-2 text-text-secondary">
+              {authLoading ? 'בודק אימות...' : 'טוען מצב נוכחי...'}
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // If not authenticated after loading
+  if (!userPhone) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header
+          title="עדכון מצב"
+          showBack
+          onBack={() => navigate('/')}
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <p className="text-text-primary mb-4">עליך להתחבר קודם כדי לעדכן סטטוס</p>
+            <button 
+              onClick={() => navigate('/login')}
+              className="button-primary"
+            >
+              עבור להתחברות
+            </button>
           </div>
         </div>
       </div>

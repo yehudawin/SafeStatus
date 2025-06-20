@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '@/supabase/client'
 import { isTestNumber, normalizePhoneNumber, formatPhoneForDisplay, TWILIO_CONFIG } from '@/utils/twilioConfig'
+import { useLogger } from '@/utils/useLogger'
 
 interface LoginPageProps {
   // Removed onLogin since it's not used
@@ -9,12 +10,11 @@ interface LoginPageProps {
 
 export default function LoginPage({}: LoginPageProps = {}) {
   const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [countdown, setCountdown] = useState(0)
-  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>('phone')
+  const { logInfo, logWarn, logError, logAuth, logUserAction } = useLogger()
 
   const validatePhone = (phoneNumber: string) => {
     try {
@@ -29,70 +29,34 @@ export default function LoginPage({}: LoginPageProps = {}) {
     }
   }
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
-
   const sendOtp = async () => {
-    if (authMethod === 'phone') {
-      if (!phone.trim()) {
-        toast.error('אנא הכנס מספר טלפון')
-        return
-      }
+    logUserAction('Login: Started OTP request', { phone: phone.substring(0, 3) + '***' })
+    
+    if (!phone.trim()) {
+      logWarn('Login: Empty phone number provided')
+      toast.error('אנא הכנס מספר טלפון')
+      return
+    }
 
-      const validPhone = validatePhone(phone)
-      if (!validPhone) {
-        toast.error('מספר טלפון לא תקין. הכנס מספר ישראלי (05xxxxxxxx)')
-        return
-      }
+    const validPhone = validatePhone(phone)
+    if (!validPhone) {
+      logWarn('Login: Invalid phone number format', { phone: phone.substring(0, 3) + '***' })
+      toast.error('מספר טלפון לא תקין. הכנס מספר ישראלי (05xxxxxxxx)')
+      return
+    }
 
-      setIsLoading(true)
-      
-      try {
-        // Check if this is a test number
-        if (isTestNumber(validPhone)) {
-          // For test numbers, simulate OTP sending without actually calling Supabase
+    setIsLoading(true)
+    
+    try {
+      // Check if this is a test number
+      if (isTestNumber(validPhone)) {
+        logInfo('Login: Test number detected, using test mode', { isTestMode: true })
+        if (import.meta.env.DEV) {
           console.log(`Test number detected: ${validPhone}. Using test OTP: ${TWILIO_CONFIG.TEST_OTP}`)
-          setIsOtpSent(true)
-          setPhone(validPhone)
-          toast.success(`קוד אימות נשלח בהודעה ל${formatPhoneForDisplay(validPhone)} (מצב בדיקה)`)
-          
-          // Start countdown
-          setCountdown(60)
-          const timer = setInterval(() => {
-            setCountdown((prev) => {
-              if (prev <= 1) {
-                clearInterval(timer)
-                return 0
-              }
-              return prev - 1
-            })
-          }, 1000)
-          return
         }
-
-        // Try phone authentication for real numbers
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: validPhone,
-          options: {
-            shouldCreateUser: true
-          }
-        })
-
-        if (error) {
-          // If phone provider is not supported, show fallback message
-          if (error.message.includes('Unsupported phone provider')) {
-            toast.error('אימות טלפון לא זמין כעת. אנא השתמש באימות דוא"ל')
-            setAuthMethod('email')
-            return
-          }
-          throw error
-        }
-
         setIsOtpSent(true)
-        setPhone(validPhone) // Update with formatted phone
-        toast.success(`קוד אימות נשלח בהודעה ל${formatPhoneForDisplay(validPhone)}`)
+        setPhone(validPhone)
+        toast.success(`קוד אימות נשלח בהודעה ל${formatPhoneForDisplay(validPhone)} (מצב בדיקה)`)
         
         // Start countdown
         setCountdown(60)
@@ -105,60 +69,48 @@ export default function LoginPage({}: LoginPageProps = {}) {
             return prev - 1
           })
         }, 1000)
-
-      } catch (error) {
-        console.error('Error sending OTP:', error)
-        toast.error('שגיאה בשליחת קוד אימות. אנא נסה שוב')
-      } finally {
-        setIsLoading(false)
-      }
-    } else {
-      // Email authentication
-      if (!email.trim()) {
-        toast.error('אנא הכנס כתובת דוא"ל')
         return
       }
 
-      if (!validateEmail(email)) {
-        toast.error('כתובת דוא"ל לא תקינה')
-        return
-      }
-
-      setIsLoading(true)
+      logInfo('Login: Sending OTP via Supabase', { phone: validPhone.substring(0, 8) + '***' })
       
-      try {
-        const { error } = await supabase.auth.signInWithOtp({
-          email: email,
-          options: {
-            shouldCreateUser: true
-          }
-        })
-
-        if (error) {
-          throw error
+      // Try phone authentication for real numbers
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: validPhone,
+        options: {
+          shouldCreateUser: true
         }
+      })
 
-        setIsOtpSent(true)
-        toast.success('קוד אימות נשלח לדוא"ל')
-        
-        // Start countdown
-        setCountdown(60)
-        const timer = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev <= 1) {
-              clearInterval(timer)
-              return 0
-            }
-            return prev - 1
-          })
-        }, 1000)
-
-      } catch (error) {
-        console.error('Error sending email OTP:', error)
-        toast.error('שגיאה בשליחת קוד אימות. אנא נסה שוב')
-      } finally {
-        setIsLoading(false)
+      if (error) {
+        throw error
       }
+
+      logAuth('OTP sent successfully', { phone: validPhone.substring(0, 8) + '***' })
+      setIsOtpSent(true)
+      setPhone(validPhone) // Update with formatted phone
+      toast.success(`קוד אימות נשלח בהודעה ל${formatPhoneForDisplay(validPhone)}`)
+      
+      // Start countdown
+      setCountdown(60)
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+    } catch (error) {
+      logError('Login: Failed to send OTP', error)
+      if (import.meta.env.DEV) {
+        console.error('Error sending OTP:', error)
+      }
+      toast.error('שגיאה בשליחת קוד אימות. אנא נסה שוב')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -169,12 +121,15 @@ export default function LoginPage({}: LoginPageProps = {}) {
   }
 
   const verifyOtp = async (token: string) => {
+    logUserAction('Login: Started OTP verification', { tokenLength: token.length })
     setIsLoading(true)
 
     try {
       // Handle test numbers
-      if (authMethod === 'phone' && isTestNumber(phone)) {
+      if (isTestNumber(phone)) {
         if (token === TWILIO_CONFIG.TEST_OTP) {
+          logAuth('Login: Test OTP verified successfully', { isTestMode: true })
+          
           // For test numbers, create a manual session
           const testUser = {
             id: 'test-user-' + Date.now(),
@@ -201,35 +156,33 @@ export default function LoginPage({}: LoginPageProps = {}) {
           window.location.reload()
           return
         } else {
+          logWarn('Login: Invalid test OTP provided', { providedToken: token })
           toast.error(`קוד אימות שגוי. לבדיקות השתמש בקוד: ${TWILIO_CONFIG.TEST_OTP}`)
           return
         }
       }
 
-      let error
-      if (authMethod === 'phone') {
-        ({ error } = await supabase.auth.verifyOtp({
-          phone,
-          token: token,
-          type: 'sms'
-        }))
-      } else {
-        ({ error } = await supabase.auth.verifyOtp({
-          email,
-          token: token,
-          type: 'email'
-        }))
-      }
+      logInfo('Login: Verifying OTP with Supabase')
+      
+      const { error } = await supabase.auth.verifyOtp({
+        phone,
+        token: token,
+        type: 'sms'
+      })
 
       if (error) {
         throw error
       }
 
+      logAuth('Login: OTP verified successfully', { phone: phone.substring(0, 8) + '***' })
       toast.success('התחברת בהצלחה!')
       // AuthContext will handle the navigation automatically
 
     } catch (error) {
-      console.error('Error verifying OTP:', error)
+      logError('Login: OTP verification failed', error)
+      if (import.meta.env.DEV) {
+        console.error('Error verifying OTP:', error)
+      }
       toast.error('קוד אימות שגוי. אנא נסה שוב')
     } finally {
       setIsLoading(false)
@@ -267,61 +220,20 @@ export default function LoginPage({}: LoginPageProps = {}) {
           <div className="card-design">
             <h2 className="text-xl font-semibold mb-4 text-center text-text-primary">התחברות</h2>
             
-            {/* Auth Method Toggle */}
-            <div className="flex bg-light-surface rounded-pill p-1 mb-4">
-              <button
-                onClick={() => setAuthMethod('phone')}
-                className={`flex-1 py-2 px-4 rounded-pill text-sm font-medium transition-colors ${
-                  authMethod === 'phone' 
-                    ? 'bg-primary text-white' 
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
-              >
-                טלפון
-              </button>
-              <button
-                onClick={() => setAuthMethod('email')}
-                className={`flex-1 py-2 px-4 rounded-pill text-sm font-medium transition-colors ${
-                  authMethod === 'email' 
-                    ? 'bg-primary text-white' 
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
-              >
-                דוא"ל
-              </button>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2 text-text-primary">מספר טלפון</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={handlePhoneChange}
+                placeholder="05X-XXX-XXXX"
+                className="w-full p-3 bg-light-surface border border-gray-300 rounded-design text-text-primary text-right focus:border-primary focus:outline-none"
+                dir="ltr"
+              />
+              <p className="text-xs text-text-secondary mt-1 text-right">
+                הכנס מספר טלפון ישראלי תקין
+              </p>
             </div>
-
-            {authMethod === 'phone' ? (
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-text-primary">מספר טלפון</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={handlePhoneChange}
-                  placeholder="05X-XXX-XXXX"
-                  className="w-full p-3 bg-light-surface border border-gray-300 rounded-design text-text-primary text-right focus:border-primary focus:outline-none"
-                  dir="ltr"
-                />
-                <p className="text-xs text-text-secondary mt-1 text-right">
-                  הכנס מספר טלפון ישראלי תקין
-                </p>
-              </div>
-            ) : (
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-text-primary">כתובת דוא"ל</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your-email@example.com"
-                  className="w-full p-3 bg-light-surface border border-gray-300 rounded-design text-text-primary focus:border-primary focus:outline-none"
-                  dir="ltr"
-                />
-                <p className="text-xs text-text-secondary mt-1 text-right">
-                  הכנס כתובת דוא"ל תקינה
-                </p>
-              </div>
-            )}
 
             <button
               onClick={sendOtp}
@@ -342,7 +254,7 @@ export default function LoginPage({}: LoginPageProps = {}) {
             <div className="text-center mb-4">
               <h2 className="text-xl font-semibold mb-2 text-text-primary">הכנס קוד אימות</h2>
               <p className="text-text-secondary text-sm">
-                נשלח קוד אימות ל{authMethod === 'phone' ? `מספר ${phone}` : `דוא"ל ${email}`}
+                נשלח קוד אימות למספר {phone}
               </p>
             </div>
 
@@ -387,7 +299,7 @@ export default function LoginPage({}: LoginPageProps = {}) {
               )}
             </div>
           </div>
-        )}
+        )        }
       </div>
     </div>
   )

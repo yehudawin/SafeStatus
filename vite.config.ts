@@ -14,6 +14,9 @@ export default defineConfig({
     },
   },
   build: {
+    target: 'es2015',
+    outDir: 'dist',
+    sourcemap: false,
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -26,9 +29,14 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
           ui: ['lucide-react', 'sonner']
         }
       }
     }
+  },
+  server: {
+    port: 5176,
+    host: true
   }
 }) 

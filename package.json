@@ -18,11 +18,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 1",
+    "build:prod": "NODE_ENV=production tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "build:prod": "NODE_ENV=production npm run build"
+    "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@capacitor-community/contacts": "^7.0.0",
     "@capacitor/android": "^7.4.0",
     "@capacitor/cli": "^7.4.0",
     "@capacitor/core": "^7.4.0",

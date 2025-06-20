@@ -113,3 +113,15 @@ temp/
 *.sln
 *.sw? 
 .vercel
+
+# SafeStatus specific logs
+safestatus-logs-*.json
+safestatus-logs-*.txt
+safestatus-all-logs-*.txt
+
+# Capacitor
+android/app/src/main/assets/public/
+ios/App/App/public/
+
+# Local logs from our logger
+*.log

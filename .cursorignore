@@ -69,3 +69,13 @@ temp/
 
 # Coverage reports
 /coverage 
+
+# SafeStatus specific logs
+safestatus-logs-*.json
+
+# Capacitor build outputs
+android/app/src/main/assets/public/
+ios/App/App/public/
+
+# Local application logs
+*.log 

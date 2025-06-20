@@ -1,14 +1,14 @@
 // Twilio Configuration
 export const TWILIO_CONFIG = {
-  // Test numbers that should bypass actual SMS sending
-  TEST_NUMBERS: [
-    '+972542699111', // המספר שלך
+  // Test numbers that should bypass actual SMS sending (only in development)
+  TEST_NUMBERS: import.meta.env.DEV ? [
+    '+972542699111', // המספר שלך - רק במצב פיתוח
     '+9720542699111', // וריאציה
     '0542699111' // פורמט מקומי
-  ],
+  ] : [],
   
-  // Default test OTP for test numbers
-  TEST_OTP: '123456',
+  // Default test OTP for test numbers (only in development)
+  TEST_OTP: import.meta.env.DEV ? '123456' : '',
   
   // Twilio settings (will be set via environment variables)
   ACCOUNT_SID: import.meta.env.VITE_TWILIO_ACCOUNT_SID,
@@ -35,6 +35,9 @@ export const normalizePhoneNumber = (phone: string): string => {
 }
 
 export const isTestNumber = (phone: string): boolean => {
+  // במצב ייצור, אין מספרי בדיקה
+  if (!import.meta.env.DEV) return false
+  
   const normalizedPhone = normalizePhoneNumber(phone)
   return TWILIO_CONFIG.TEST_NUMBERS.some(testNumber => {
     const normalizedTestNumber = normalizePhoneNumber(testNumber)

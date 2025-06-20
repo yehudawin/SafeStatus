@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database, User, Contact, UserStatus, ApiResponse, ContactWithStatus, UserContact, PhoneContact } from '@/types'
 
-const supabaseUrl = 'https://avjuwnpuprutycsmyiar.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2anV3bnB1cHJ1dHljc215aWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMjk2MzYsImV4cCI6MjA2NTkwNTYzNn0.pCuCx5FFitA8pvVgWaTMdNEL783Nfqf9gAUuoXSzkaQ'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://avjuwnpuprutycsmyiar.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2anV3bnB1cHJ1dHljc215aWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMjk2MzYsImV4cCI6MjA2NTkwNTYzNn0.pCuCx5FFitA8pvVgWaTMdNEL783Nfqf9gAUuoXSzkaQ'
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {

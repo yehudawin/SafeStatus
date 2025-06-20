@@ -5,11 +5,14 @@ import { Contact, Users, CheckSquare, Square, UserCheck, Search } from 'lucide-r
 import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { syncPhoneContacts, getUserContacts, updateContactSelection, selectAllContacts } from '@/supabase/client'
-import type { UserContact, PhoneContact } from '@/types'
+import { requestContactsPermission as requestPermission, getDeviceContacts, isContactsSupported } from '@/utils/contactsService'
+import { useLogger } from '@/utils/useLogger'
+import type { UserContact } from '@/types'
 
 export default function ContactSyncPage() {
   const navigate = useNavigate()
   const { userPhone } = useAuth()
+  const { logError } = useLogger()
   const [step, setStep] = useState<'request' | 'syncing' | 'selecting'>('request')
   const [contacts, setContacts] = useState<UserContact[]>([])
   const [selectedCount, setSelectedCount] = useState(0)
@@ -35,7 +38,13 @@ export default function ContactSyncPage() {
         }
       }
     } catch (error) {
-      console.error('Error loading synced contacts:', error)
+      logError('Error loading synced contacts', error)
+      if (import.meta.env.DEV) {
+        console.error('Error loading synced contacts:', error)
+      }
+      setContacts([])
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -43,41 +52,60 @@ export default function ContactSyncPage() {
     setStep('syncing')
     setLoading(true)
     
-    toast.warning('שימוש בנתוני הדמיה', {
-      description: 'סנכרון אנשי קשר אמיתי יופעל בגרסת ה-Build של האפליקציה.',
-      duration: 5000,
-    });
-
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // בקש הרשאה לגישה לאנשי קשר (רק במכשיר נייד)
+      if (isContactsSupported()) {
+        const permissionResult = await requestPermission()
+        if (!permissionResult.granted) {
+          toast.error(permissionResult.message)
+          setStep('request')
+          setLoading(false)
+          return
+        }
+        toast.success(permissionResult.message)
+      } else {
+        toast.warning('שימוש בנתוני הדמיה', {
+          description: 'גישה לאנשי קשר אמיתיים זמינה רק באפליקציית הנייד.',
+          duration: 3000,
+        });
+      }
+
+      // השהיה קצרה לחוויית משתמש טובה
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      const mockPhoneContacts: PhoneContact[] = [
-        { name: 'אמא', phoneNumbers: ['050-1234567'] },
-        { name: 'אבא', phoneNumbers: ['052-2345678'] },
-        { name: 'אחי דני', phoneNumbers: ['053-3456789', '02-9876543'] },
-        { name: 'חברה שרה', phoneNumbers: ['054-4567890'] },
-        { name: 'עבודה - מנהל', phoneNumbers: ['03-1234567', '050-9876543'] },
-        { name: 'רופא המשפחה', phoneNumbers: ['02-5555555'] },
-        { name: 'חבר מהצבא', phoneNumbers: ['055-1111111'] }
-      ]
+      // קבל את אנשי הקשר מהמכשיר או נתוני הדמיה
+      const contactsResult = await getDeviceContacts()
       
-      if (!userPhone) {
-        toast.error('שגיאה בזיהוי המשתמש')
+      if (!contactsResult.success || !contactsResult.contacts) {
+        toast.error(contactsResult.error || 'שגיאה בקריאת אנשי קשר')
+        setStep('request')
         return
       }
 
-      const result = await syncPhoneContacts(userPhone, mockPhoneContacts)
+      if (!userPhone) {
+        toast.error('שגיאה בזיהוי המשתמש')
+        setStep('request')
+        return
+      }
+
+      // סנכרן את אנשי הקשר לדאטה בייס
+      const result = await syncPhoneContacts(userPhone, contactsResult.contacts)
       
       if (result.success && result.data) {
         setContacts(result.data)
         setStep('selecting')
-        toast.success(`סונכרנו ${result.data.length} אנשי קשר מהטלפון`)
+        const platformMessage = isContactsSupported() ? 'מהמכשיר' : '(נתוני הדמיה)'
+        toast.success(`סונכרנו ${result.data.length} אנשי קשר ${platformMessage}`)
       } else {
         toast.error(result.error || 'שגיאה בסנכרון אנשי הקשר')
         setStep('request')
       }
     } catch (error) {
-      toast.error('שגיאה בגישה לאנשי הקשר')
+      logError('Error in requestContactsPermission', error)
+      if (import.meta.env.DEV) {
+        console.error('Error in requestContactsPermission:', error)
+      }
+      toast.error('שגיאה בגישה לאנשי קשר. אנא נסה שוב')
       setStep('request')
     } finally {
       setLoading(false)
@@ -162,9 +190,9 @@ export default function ContactSyncPage() {
           <h1 className="text-2xl font-bold mb-4 text-center text-text-primary">סנכרון אנשי קשר</h1>
           
           <p className="text-center text-text-secondary mb-8 leading-relaxed">
-            כדי להתחיל להשתמש באפליקציה, נצטרך לסנכרן את רשימת אנשי הקשר שלך מהטלפון.
+            כדי להתחיל להשתמש באפליקציה, נצטרך לגשת לרשימת אנשי הקשר שלך מהמכשיר.
             <br /><br />
-            לאחר מכן תוכל לבחור בדיוק עם מי אתה רוצה לשתף את הסטטוס שלך.
+            לאחר מכן תוכל לבחור בדיוק עם מי אתה רוצה לשתף את הסטטוס שלך במצבי חירום.
           </p>
           
           <button
@@ -173,7 +201,7 @@ export default function ContactSyncPage() {
             className="button-primary w-full py-4 text-lg font-bold mb-6 flex items-center justify-center disabled:opacity-50 hover:bg-opacity-90 transition-colors"
           >
             <Contact className="ml-2" size={20} />
-            סנכרן אנשי קשר מהטלפון
+            {isContactsSupported() ? 'גש לאנשי קשר במכשיר' : 'התחל עם נתוני הדמיה'}
           </button>
           
           <div className="bg-safe/10 border border-safe/30 rounded-design p-4 mb-6">

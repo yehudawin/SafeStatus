@@ -16,39 +16,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('AuthContext: Checking for existing sessions...')
+    }
+
     // Get initial session
     const getSession = async () => {
-      console.log('AuthContext: Checking for existing sessions...')
-      
       // First check for test session in localStorage
       const testSession = localStorage.getItem('supabase.auth.token')
       if (testSession) {
         try {
           const parsedSession = JSON.parse(testSession)
-          console.log('AuthContext: Found test session:', parsedSession)
+          if (import.meta.env.DEV) {
+            console.log('AuthContext: Found test session:', parsedSession)
+          }
           if (parsedSession.user && parsedSession.expires_at > Date.now()) {
-            console.log('AuthContext: Test session is valid, setting user')
+            if (import.meta.env.DEV) {
+              console.log('AuthContext: Test session is valid, setting user')
+            }
             setUser(parsedSession.user)
             setLoading(false)
             return
           } else {
-            console.log('AuthContext: Test session expired, removing it')
+            if (import.meta.env.DEV) {
+              console.log('AuthContext: Test session expired, removing it')
+            }
             // Test session expired, remove it
             localStorage.removeItem('supabase.auth.token')
           }
         } catch (error) {
-          console.error('Error parsing test session:', error)
+          if (import.meta.env.DEV) {
+            console.error('AuthContext: Error parsing test session:', error)
+          }
           localStorage.removeItem('supabase.auth.token')
         }
       } else {
-        console.log('AuthContext: No test session found')
+        if (import.meta.env.DEV) {
+          console.log('AuthContext: No test session found')
+        }
       }
 
       // Check for real Supabase session
-      console.log('AuthContext: Checking Supabase session...')
+      if (import.meta.env.DEV) {
+        console.log('AuthContext: Checking Supabase session...')
+      }
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        console.log('AuthContext: Supabase session:', session)
+        if (import.meta.env.DEV) {
+          console.log('AuthContext: Supabase session:', session)
+        }
         setUser(session?.user ?? null)
         setLoading(false)
         
@@ -59,7 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })
         }
       } catch (error) {
-        console.error('AuthContext: Error getting Supabase session:', error)
+        if (import.meta.env.DEV) {
+          console.error('AuthContext: Error getting Supabase session:', error)
+        }
         setUser(null)
         setLoading(false)
       }
@@ -71,12 +89,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('AuthContext: Auth state change:', event, session)
+      if (import.meta.env.DEV) {
+        console.log('AuthContext: Auth state change:', event, session)
+      }
       
       // Don't override test sessions unless we have a real session
       const testSession = localStorage.getItem('supabase.auth.token')
       if (testSession && !session) {
-        console.log('AuthContext: Ignoring auth state change because we have a valid test session')
+        if (import.meta.env.DEV) {
+          console.log('AuthContext: Ignoring auth state change because we have a valid test session')
+        }
         return
       }
       
@@ -90,7 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             user_phone: session.user.phone
           })
         } catch (error) {
-          console.error('AuthContext: Error setting RLS context:', error)
+          if (import.meta.env.DEV) {
+            console.error('AuthContext: Error setting RLS context:', error)
+          }
         }
       }
     })

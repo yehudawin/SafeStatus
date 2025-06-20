@@ -37,6 +37,19 @@ export interface PhoneContact {
   phoneNumbers: string[]
 }
 
+// Log types
+export interface LogEntry {
+  id: string
+  timestamp: string
+  level: 'info' | 'warn' | 'error'
+  message: string
+  data?: any
+  user_phone?: string
+  page?: string
+  user_agent?: string
+  stack?: string
+}
+
 // Auth types
 export interface AuthUser {
   phone: string
@@ -83,6 +96,11 @@ export interface Database {
           updated_at?: string
         }
         Update: Partial<UserContact>
+      }
+      logs: {
+        Row: LogEntry
+        Insert: Omit<LogEntry, 'timestamp'> & { timestamp?: string }
+        Update: Partial<LogEntry>
       }
     }
   }
