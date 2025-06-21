@@ -1,8 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database, User, Contact, UserStatus, ApiResponse, ContactWithStatus, UserContact, PhoneContact } from '@/types'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://avjuwnpuprutycsmyiar.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2anV3bnB1cHJ1dHljc215aWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMjk2MzYsImV4cCI6MjA2NTkwNTYzNn0.pCuCx5FFitA8pvVgWaTMdNEL783Nfqf9gAUuoXSzkaQ'
+// וידוא שמשתני הסביבה קיימים
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Please check your .env file.')
+}
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -15,9 +20,17 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 // Direct API functions
 export const updateUserStatus = async (phone: string, status: UserStatus): Promise<ApiResponse<User>> => {
   try {
+    if (import.meta.env.DEV) {
+      console.log(`Attempting to update status for ${phone} to ${status}`)
+    }
+
     // First ensure user exists
     const userCheck = await getUserByPhone(phone)
     if (!userCheck.success) {
+      if (import.meta.env.DEV) {
+        console.log(`User ${phone} doesn't exist, creating...`)
+      }
+      
       // Create user if doesn't exist
       const { error: createError } = await supabase
         .from('users')
@@ -29,7 +42,12 @@ export const updateUserStatus = async (phone: string, status: UserStatus): Promi
           join_date: new Date().toISOString()
         })
 
-      if (createError) throw createError
+      if (createError) {
+        if (import.meta.env.DEV) {
+          console.error('Failed to create user:', createError)
+        }
+        throw createError
+      }
     }
 
     // Now update the status
@@ -40,10 +58,40 @@ export const updateUserStatus = async (phone: string, status: UserStatus): Promi
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      if (import.meta.env.DEV) {
+        console.error('Failed to update status:', error)
+      }
+      throw error
+    }
+    
+    if (import.meta.env.DEV) {
+      console.log(`Successfully updated status for ${phone} to ${status}`)
+    }
+    
     return { data, success: true }
   } catch (error) {
-    return { error: error instanceof Error ? error.message : 'Failed to update status', success: false }
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update status'
+    
+    if (import.meta.env.DEV) {
+      console.error('updateUserStatus error:', error)
+    }
+    
+    // נתן מידע מפורט יותר על השגיאה
+    let detailedMessage = errorMessage
+    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+      detailedMessage = 'בעיית הרשאות - אנא התחבר מחדש או השתמש באימות אמיתי'
+    } else if (errorMessage.includes('42501') || errorMessage.includes('violates row-level security policy')) {
+      detailedMessage = 'בעיית הרשאות RLS - אנא השתמש באימות אמיתי דרך SMS'
+    } else if (errorMessage.includes('policy')) {
+      detailedMessage = 'בעיית הרשאות מסד נתונים - אנא התחבר מחדש'
+    } else if (errorMessage.includes('network')) {
+      detailedMessage = 'בעיית חיבור לאינטרנט'
+    } else if (errorMessage.includes('auth')) {
+      detailedMessage = 'בעיית אימות - אנא התחבר מחדש'
+    }
+    
+    return { error: detailedMessage, success: false }
   }
 }
 
@@ -162,11 +210,19 @@ export const getAllUserContacts = async (userPhone: string): Promise<ApiResponse
 // User Contacts (synced from phone) functions
 export const syncPhoneContacts = async (userPhone: string, contacts: PhoneContact[]): Promise<ApiResponse<UserContact[]>> => {
   try {
+    if (import.meta.env.DEV) {
+      console.log(`syncPhoneContacts: Starting sync for ${userPhone} with ${contacts.length} contacts`)
+    }
+
     // Clear existing contacts first
-    await supabase
+    const { error: deleteError } = await supabase
       .from('user_contacts')
       .delete()
       .eq('user_phone', userPhone)
+
+    if (deleteError && import.meta.env.DEV) {
+      console.warn('syncPhoneContacts: Error deleting existing contacts (might be expected if none exist):', deleteError)
+    }
 
     // Prepare contacts for insertion
     const contactsToInsert = contacts.flatMap(contact => 
@@ -178,15 +234,45 @@ export const syncPhoneContacts = async (userPhone: string, contacts: PhoneContac
       }))
     )
 
+    if (import.meta.env.DEV) {
+      console.log(`syncPhoneContacts: Inserting ${contactsToInsert.length} contact records`)
+    }
+
     const { data, error } = await supabase
       .from('user_contacts')
       .insert(contactsToInsert)
       .select()
 
-    if (error) throw error
+    if (error) {
+      if (import.meta.env.DEV) {
+        console.error('syncPhoneContacts: Insert failed:', error)
+      }
+      throw error
+    }
+    
+    if (import.meta.env.DEV) {
+      console.log(`syncPhoneContacts: Successfully inserted ${data?.length || 0} records`)
+    }
+    
     return { data: data || [], success: true }
   } catch (error) {
-    return { error: error instanceof Error ? error.message : 'Failed to sync contacts', success: false }
+    const errorMessage = error instanceof Error ? error.message : 'Failed to sync contacts'
+    
+    if (import.meta.env.DEV) {
+      console.error('syncPhoneContacts: Failed with error:', error)
+    }
+    
+    // נתן מידע מפורט יותר על השגיאה
+    let detailedMessage = errorMessage
+    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+      detailedMessage = 'בעיית הרשאות - אנא התחבר מחדש'
+    } else if (errorMessage.includes('policy')) {
+      detailedMessage = 'בעיית הרשאות מסד נתונים - אנא התחבר מחדש'
+    } else if (errorMessage.includes('network')) {
+      detailedMessage = 'בעיית חיבור לאינטרנט'
+    }
+    
+    return { error: detailedMessage, success: false }
   }
 }
 

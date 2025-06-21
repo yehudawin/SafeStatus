@@ -123,7 +123,18 @@ export default function ContactSyncPage() {
         toast.success(`סונכרנו ${result.data.length} אנשי קשר ${platformMessage}`)
       } else {
         logError('Failed to sync contacts to database', result)
-        toast.error(result.error || 'שגיאה בסנכרון אנשי הקשר')
+        const errorMessage = result.error || 'שגיאה בסנכרון אנשי הקשר'
+        toast.error(errorMessage)
+        
+        // אם זו בעיית RLS, תן הנחיה מיוחדת
+        if (errorMessage.includes('RLS') || errorMessage.includes('הרשאות')) {
+          setTimeout(() => {
+            toast.info('💡 נסה להשתמש בכפתור "🔧 תקן RLS" בפינה השמאלית', {
+              duration: 6000
+            })
+          }, 2000)
+        }
+        
         setStep('request')
       }
     } catch (error) {

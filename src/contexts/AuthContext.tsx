@@ -35,6 +35,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.log('AuthContext: Test session is valid, setting user')
             }
             setUser(parsedSession.user)
+            
+            // Set RLS context for test session too!
+            if (parsedSession.user.phone) {
+              try {
+                await supabase.rpc('set_current_user_phone', {
+                  user_phone: parsedSession.user.phone
+                })
+                if (import.meta.env.DEV) {
+                  console.log('AuthContext: Set RLS context for test session:', parsedSession.user.phone)
+                }
+              } catch (error) {
+                if (import.meta.env.DEV) {
+                  console.error('AuthContext: Error setting RLS context for test session:', error)
+                }
+              }
+            }
+            
             setLoading(false)
             return
           } else {

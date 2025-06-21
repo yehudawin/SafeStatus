@@ -62,16 +62,17 @@ export const requestContactsPermission = async (): Promise<ContactPermissionResu
     
     // אם זה שגיאת פלאגין, ננסה להמשיך עם נתוני הדמיה
     const errorMessage = error instanceof Error ? error.message : String(error)
-    if (errorMessage.includes('plugin') || errorMessage.includes('not available')) {
+    if (errorMessage.includes('plugin') || errorMessage.includes('not available') || errorMessage.includes('not implemented')) {
       return {
         granted: true,
         message: 'משתמש בנתוני הדמיה - פלאגין אנשי קשר לא זמין'
       }
     }
     
+    // במקרה של שגיאות אחרות, נדווח על כשל בבקשת הרשאה
     return {
       granted: false,
-      message: 'שגיאה בבקשת הרשאה לגישה לאנשי קשר'
+      message: `שגיאה בבקשת הרשאה: ${errorMessage.substring(0, 100)}`
     }
   }
 }

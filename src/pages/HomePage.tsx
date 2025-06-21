@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { PenSquare } from 'lucide-react'
+import { PenSquare, TestTube } from 'lucide-react'
 import Header from '@/components/Header'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatRelativeTime, groupContactsByStatus } from '@/types'
 import { getMutualContacts, getUserContacts } from '@/supabase/client'
+import { systemTester } from '@/utils/systemTest'
 import type { ContactWithStatus, User, UserContact } from '@/types'
 
 export default function HomePage() {
@@ -160,10 +161,34 @@ export default function HomePage() {
             </p>
             <button
               onClick={() => navigate('/contacts')}
-              className="button-primary hover:bg-opacity-90 transition-colors"
+              className="button-primary hover:bg-opacity-90 transition-colors mb-4"
             >
               סנכרן אנשי קשר
             </button>
+            
+            {/* כפתור בדיקה זמני - רק בפיתוח */}
+            {import.meta.env.DEV && (
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h4 className="text-sm font-medium text-yellow-800 mb-2">🔧 כלי פיתוח</h4>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => systemTester.runQuickCheck()}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors text-sm"
+                  >
+                    <TestTube size={16} />
+                    בדיקה מהירה של המערכת
+                  </button>
+                  <button
+                    onClick={() => systemTester.runFullSystemCheck()}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <TestTube size={16} />
+                    בדיקה מלאה של המערכת
+                  </button>
+                </div>
+                <p className="text-xs text-yellow-700 mt-2">תוצאות הבדיקה יופיעו בקונסול הדפדפן</p>
+              </div>
+            )}
           </div>
         )}
 

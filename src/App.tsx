@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import TestAuthHelper from '@/components/TestAuthHelper'
 
 // Pages
 import LoginPage from '@/pages/LoginPage'
@@ -66,6 +67,9 @@ function App() {
             richColors
             dir="rtl"
           />
+          
+          {/* Development auth helper */}
+          <TestAuthHelper />
         </Router>
       </AuthProvider>
     </ErrorBoundary>
