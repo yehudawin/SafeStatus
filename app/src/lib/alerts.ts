@@ -4,46 +4,72 @@ import type { SocketAlert } from './types'
 const PRIMARY_URL = 'https://redalert.orielhaim.com'
 const FALLBACK_URL = 'https://redalert.auto-host.xyz'
 
-let socket: Socket | null = null
-
 type AlertListener = (alert: SocketAlert) => void
 const listeners = new Set<AlertListener>()
+let socket: Socket | null = null
+let usingFallback = false
+let fallbackAttempted = false
 
 function broadcast(data: SocketAlert) {
   listeners.forEach(fn => fn(data))
 }
 
-export function connectAlerts(onAlert: AlertListener): () => void {
-  listeners.add(onAlert)
+function createSocket(url: string): Socket {
+  return io(url, {
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 2000,
+    timeout: 10000,
+  })
+}
 
-  if (!socket) {
-    socket = io(PRIMARY_URL, {
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      timeout: 10000,
-    })
+function initSocket() {
+  if (socket) return
 
+  socket = createSocket(PRIMARY_URL)
+  socket.on('alert', broadcast)
+
+  socket.on('connect_error', () => {
+    if (usingFallback || fallbackAttempted) return
+    fallbackAttempted = true
+
+    socket?.removeAllListeners()
+    socket?.disconnect()
+
+    socket = createSocket(FALLBACK_URL)
+    usingFallback = true
     socket.on('alert', broadcast)
 
     socket.on('connect_error', () => {
-      socket?.disconnect()
-      socket = io(FALLBACK_URL, {
-        transports: ['websocket'],
-        reconnection: true,
-        reconnectionAttempts: 5,
-        timeout: 10000,
-      })
-      socket.on('alert', broadcast)
+      setTimeout(() => {
+        if (listeners.size === 0) return
+        fallbackAttempted = false
+        usingFallback = false
+        socket?.removeAllListeners()
+        socket?.disconnect()
+        socket = null
+        initSocket()
+      }, 30000)
     })
-  }
+  })
+}
+
+function destroySocket() {
+  socket?.removeAllListeners()
+  socket?.disconnect()
+  socket = null
+  usingFallback = false
+  fallbackAttempted = false
+}
+
+export function connectAlerts(onAlert: AlertListener): () => void {
+  listeners.add(onAlert)
+  initSocket()
 
   return () => {
     listeners.delete(onAlert)
-    if (listeners.size === 0 && socket) {
-      socket.disconnect()
-      socket = null
-    }
+    if (listeners.size === 0) destroySocket()
   }
 }
 

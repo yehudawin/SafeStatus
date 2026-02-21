@@ -11,7 +11,6 @@ interface ActivePrompt {
   type: PromptType
   alert: SocketAlert
   cities: string[]
-  dismissedAt?: number
 }
 
 interface NotifState {
@@ -34,7 +33,7 @@ const NotifCtx = createContext<NotifState>({
 
 function sendBrowserNotification(title: string, body: string) {
   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-    new Notification(title, { body, icon: '/favicon.ico', tag: 'safestatus-alert' })
+    try { new Notification(title, { body, tag: 'safestatus-alert' }) } catch { /* Capacitor may not support */ }
   }
 }
 
@@ -62,12 +61,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     if (!current || !profile?.city) return
 
     const alertCities = current.cities ?? current.data ?? []
-    const isMyArea = alertCities.some(c =>
-      c === profile.city || c.includes(profile.city!) || profile.city!.includes(c)
-    )
+    const isMyArea = alertCities.some(c => c === profile.city)
     if (!isMyArea) return
 
-    const alertId = alertCities.sort().join(',') + (current.title ?? '')
+    const alertId = [...alertCities].sort().join(',') + (current.title ?? '')
     if (alertId === lastAlertId.current) return
     lastAlertId.current = alertId
 
@@ -96,10 +93,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const updateStatus = useCallback(async (status: 'in_shelter' | 'safe') => {
     if (!user) return
-    await supabase.from('profiles')
-      .update({ status, status_updated_at: new Date().toISOString() })
-      .eq('id', user.id)
-    await refreshProfile()
+    try {
+      await supabase.from('profiles')
+        .update({ status, status_updated_at: new Date().toISOString() })
+        .eq('id', user.id)
+      await refreshProfile()
+    } catch { /* fail silently, status visible in UI */ }
   }, [user, refreshProfile])
 
   const dismissPrompt = useCallback(() => setPrompt(null), [])

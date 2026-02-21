@@ -5,15 +5,9 @@ import { useAuth } from '../lib/auth'
 import { normalizePhone } from '../lib/phone'
 import { useAlerts } from '../lib/alertContext'
 import { useNotifications } from '../lib/notifications'
+import { CITIES } from '../lib/cities'
 import { useToast } from '../components/Toast'
 import AppShell from '../components/AppShell'
-
-const CITIES = [
-  "תל אביב - יפו","ירושלים","חיפה","ראשון לציון","פתח תקווה","אשדוד","נתניה",
-  "באר שבע","חולון","בני ברק","רמת גן","רחובות","אשקלון","בת ים","בית שמש",
-  "הרצליה","כפר סבא","חדרה","מודיעין מכבים רעות","לוד","רעננה","רמלה",
-  "נצרת","ראש העין","נהריה","קריית גת","אילת","עכו","כרמיאל","הוד השרון","טבריה",
-]
 
 const DEMO_USERS = [
   { name: 'שרה כהן', city: 'תל אביב - יפו', status: 'safe' as const },
@@ -36,6 +30,7 @@ export default function SettingsPage() {
   const [showCityPicker, setShowCityPicker] = useState(false)
   const [citySearch, setCitySearch] = useState('')
   const [showDevPanel, setShowDevPanel] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [demoFollowUpSec, setDemoFollowUpSec] = useState(15)
 
   const resyncContacts = async () => {
@@ -79,12 +74,16 @@ export default function SettingsPage() {
   }
 
   const deleteAccount = async () => {
-    if (!confirm('האם אתה בטוח? פעולה זו תמחק את כל הנתונים שלך.')) return
     if (!user) return
-    await supabase.from('user_contacts').delete().eq('user_id', user.id)
-    await supabase.from('profiles').delete().eq('id', user.id)
-    await supabase.auth.signOut()
-    nav('/login', { replace: true })
+    try {
+      await supabase.from('status_requests').delete().or(`from_user_id.eq.${user.id},to_user_id.eq.${user.id}`)
+      await supabase.from('user_contacts').delete().eq('user_id', user.id)
+      await supabase.auth.signOut()
+      nav('/login', { replace: true })
+    } catch {
+      toast.show('שגיאה במחיקת החשבון', 'error')
+    }
+    setShowDeleteConfirm(false)
   }
 
   const filteredCities = CITIES.filter(c => c.includes(citySearch))
@@ -304,7 +303,7 @@ export default function SettingsPage() {
               </div>
               <p className="font-medium text-sm text-[#EF4444]">התנתקות</p>
             </button>
-            <button onClick={deleteAccount} className="w-full p-4 flex items-center gap-3 hover:bg-[#374151] transition-colors text-right">
+            <button onClick={() => setShowDeleteConfirm(true)} className="w-full p-4 flex items-center gap-3 hover:bg-[#374151] transition-colors text-right">
               <div className="w-9 h-9 rounded-lg bg-[#EF4444]/10 flex items-center justify-center">
                 <i className="fa-solid fa-trash text-[#EF4444] text-sm" />
               </div>
@@ -345,6 +344,25 @@ export default function SettingsPage() {
                   {city}
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in p-6" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="bg-[#1F2937] rounded-2xl border border-[#374151] shadow-2xl p-6 w-full max-w-sm text-center animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 rounded-full bg-[#EF4444]/10 flex items-center justify-center mx-auto mb-4">
+              <i className="fa-solid fa-triangle-exclamation text-[#EF4444] text-2xl" />
+            </div>
+            <h3 className="text-lg font-bold mb-2">מחיקת חשבון</h3>
+            <p className="text-sm text-[#D1D5DB] mb-6">פעולה זו תמחק את כל הנתונים שלך ואינה ניתנת לביטול.</p>
+            <div className="space-y-3">
+              <button onClick={deleteAccount} className="w-full py-3 bg-[#EF4444] hover:bg-red-600 text-white font-bold rounded-xl transition-colors">
+                כן, מחק את החשבון
+              </button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="w-full py-3 bg-[#374151] hover:bg-[#4B5563] text-[#F9FAFB] font-medium rounded-xl transition-colors">
+                ביטול
+              </button>
             </div>
           </div>
         </div>

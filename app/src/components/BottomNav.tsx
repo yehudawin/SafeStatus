@@ -16,7 +16,7 @@ export default function BottomNav({ alertBadge }: Props) {
   const nav = useNavigate()
 
   return (
-    <nav className="bg-[#1F2937]/90 backdrop-blur-md border-t border-[#374151] absolute bottom-0 w-full z-40 pb-5 pt-2 px-6">
+    <nav className="bg-[#1F2937]/90 backdrop-blur-md border-t border-[#374151] absolute bottom-0 w-full z-40 pt-2 px-6" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
       <div className="flex justify-between items-center">
         {TABS.map(tab => {
           const active = location.pathname === tab.path
@@ -24,7 +24,8 @@ export default function BottomNav({ alertBadge }: Props) {
             <button
               key={tab.path}
               onClick={() => nav(tab.path)}
-              className={`flex flex-col items-center gap-1 p-2 transition-colors relative ${
+              aria-label={tab.label}
+              className={`flex flex-col items-center gap-1 min-w-[48px] min-h-[48px] p-2 transition-colors relative ${
                 active ? 'text-[#3B82F6]' : 'text-[#D1D5DB] hover:text-[#F9FAFB]'
               }`}
             >

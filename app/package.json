@@ -1,15 +1,25 @@
 {
-  "name": "app",
+  "name": "safestatus",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:android": "npm run build && npx cap sync android",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^7.3.0",
+    "@capacitor/app": "^7.0.2",
+    "@capacitor/core": "^7.3.0",
+    "@capacitor/haptics": "^7.0.2",
+    "@capacitor/keyboard": "^7.0.2",
+    "@capacitor/splash-screen": "^7.0.2",
+    "@capacitor/status-bar": "^7.0.2",
     "@fortawesome/fontawesome-free": "^7.2.0",
     "@supabase/supabase-js": "^2.97.0",
     "@types/leaflet": "^1.9.21",
@@ -21,6 +31,7 @@
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.3.0",
     "@eslint/js": "^9.39.1",
     "@tailwindcss/vite": "^4.2.0",
     "@types/node": "^24.10.1",

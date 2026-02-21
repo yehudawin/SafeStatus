@@ -17,6 +17,14 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function RequireOnboarded({ children }: { children: React.ReactNode }) {
+  const { user, profile, loading } = useAuth()
+  if (loading) return <div className="min-h-dvh bg-black flex items-center justify-center"><div className="spinner" /></div>
+  if (!user) return <Navigate to="/login" replace />
+  if (!profile?.city) return <Navigate to="/onboarding/city" replace />
+  return <>{children}</>
+}
+
 function RequireGuest({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   if (loading) return <div className="min-h-dvh bg-black flex items-center justify-center"><div className="spinner" /></div>
@@ -29,14 +37,14 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<RequireGuest><LoginPage /></RequireGuest>} />
-      <Route path="/otp" element={<RequireGuest><OtpPage /></RequireGuest>} />
+      <Route path="/otp" element={<OtpPage />} />
       <Route path="/onboarding/city" element={<RequireAuth><CitySelectPage /></RequireAuth>} />
       <Route path="/onboarding/sync" element={<RequireAuth><ContactSyncPage /></RequireAuth>} />
       <Route path="/onboarding/ready" element={<RequireAuth><ReadyPage /></RequireAuth>} />
-      <Route path="/home" element={<RequireAuth><HomePage /></RequireAuth>} />
-      <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
-      <Route path="/map" element={<RequireAuth><AlertsMapPage /></RequireAuth>} />
-      <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
+      <Route path="/home" element={<RequireOnboarded><HomePage /></RequireOnboarded>} />
+      <Route path="/settings" element={<RequireOnboarded><SettingsPage /></RequireOnboarded>} />
+      <Route path="/map" element={<RequireOnboarded><AlertsMapPage /></RequireOnboarded>} />
+      <Route path="/notifications" element={<RequireOnboarded><NotificationsPage /></RequireOnboarded>} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

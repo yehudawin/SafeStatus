@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../lib/auth'
 import OnboardingShell from '../components/OnboardingShell'
-import StatusBar from '../components/StatusBar'
 import OnboardingHeader from '../components/OnboardingHeader'
 import ProgressBar from '../components/ProgressBar'
 import PrimaryButton from '../components/PrimaryButton'
@@ -21,11 +22,7 @@ function fireConfetti() {
     el.animate([
       { transform: 'translateY(-10px) rotate(0deg)', opacity: '1' },
       { transform: `translateY(${window.innerHeight}px) rotate(${Math.random()*360}deg)`, opacity: '0' },
-    ], {
-      duration: 1500 + Math.random() * 1000,
-      easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-      fill: 'forwards',
-    })
+    ], { duration: 1500 + Math.random() * 1000, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'forwards' })
     document.body.appendChild(el)
     setTimeout(() => el.remove(), 3000)
   }
@@ -33,6 +30,16 @@ function fireConfetti() {
 
 export default function ReadyPage() {
   const nav = useNavigate()
+  const { user } = useAuth()
+  const [mutualCount, setMutualCount] = useState(0)
+
+  const fetchMutuals = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase.rpc('get_mutual_contacts', { requesting_user_id: user.id })
+    setMutualCount(data?.length ?? 0)
+  }, [user])
+
+  useEffect(() => { fetchMutuals() }, [fetchMutuals])
 
   useEffect(() => {
     const t = setTimeout(fireConfetti, 500)
@@ -41,14 +48,12 @@ export default function ReadyPage() {
 
   return (
     <OnboardingShell>
-      <StatusBar />
       <OnboardingHeader showBack />
       <ProgressBar step={3} />
 
       <div className="flex-1 flex flex-col px-6 relative overflow-y-auto pb-6">
         <div className="flex flex-col h-full">
 
-          {/* Illustration */}
           <div className="flex justify-center py-6 relative mb-2">
             <div className="absolute inset-0 rounded-full opacity-30" style={{ background: 'radial-gradient(circle at center, rgba(16,185,129,0.15) 0%, transparent 70%)' }} />
             <div className="w-48 h-48 relative animate-float">
@@ -61,7 +66,6 @@ export default function ReadyPage() {
                   </div>
                 </div>
               </div>
-              {/* Floating avatars */}
               {AVATARS.map((src, i) => {
                 const pos = ['top-0 right-4 w-10 h-10', 'bottom-8 left-2 w-8 h-8', 'top-10 left-0 w-6 h-6']
                 return (
@@ -74,7 +78,6 @@ export default function ReadyPage() {
             </div>
           </div>
 
-          {/* Text */}
           <div className="text-center mb-8 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <h1 className="text-3xl font-bold text-white mb-3">אנחנו מוכנים!</h1>
             <p className="text-[#9CA3AF] text-sm leading-relaxed px-4">
@@ -82,7 +85,6 @@ export default function ReadyPage() {
             </p>
           </div>
 
-          {/* Summary card */}
           <div className="glass-card rounded-2xl p-5 mb-6 animate-slide-up shadow-lg relative overflow-hidden" style={{ animationDelay: '0.5s' }}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF4D4D]/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
             <div className="flex items-start gap-4 relative z-10">
@@ -91,42 +93,45 @@ export default function ReadyPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-2xl font-bold text-white tabular-nums">12</span>
+                  <span className="text-2xl font-bold text-white tabular-nums">{mutualCount}</span>
                   <span className="text-sm font-medium text-white/90">אנשי קשר הדדיים</span>
                 </div>
                 <p className="text-xs text-[#9CA3AF] leading-relaxed">
-                  אלו אנשי קשר ששמרו את המספר שלך וגם משתמשים באפליקציה. תוכלו לראות את הסטטוס אחד של השני.
+                  {mutualCount > 0
+                    ? 'אלו אנשי קשר ששמרו את המספר שלך וגם משתמשים באפליקציה.'
+                    : 'כרגע אין אנשי קשר הדדיים. הזמינו חברים להתקין את SafeStatus.'}
                 </p>
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-              <div className="flex -space-x-2 space-x-reverse overflow-hidden px-1">
-                {AVATARS.map((src, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-[#1A1D24] bg-[#232730] relative" style={{ zIndex: 30 - i * 10 }}>
-                    <img src={src} className="w-full h-full rounded-full object-cover" alt="" />
-                  </div>
-                ))}
-                <div className="w-8 h-8 rounded-full border-2 border-[#1A1D24] bg-[#232730] flex items-center justify-center text-[10px] text-white font-medium">+9</div>
+            {mutualCount > 0 && (
+              <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                <div className="flex -space-x-2 space-x-reverse overflow-hidden px-1">
+                  {AVATARS.slice(0, Math.min(mutualCount, 3)).map((src, i) => (
+                    <div key={i} className="w-8 h-8 rounded-full border-2 border-[#1A1D24] bg-[#232730] relative" style={{ zIndex: 30 - i * 10 }}>
+                      <img src={src} className="w-full h-full rounded-full object-cover" alt="" />
+                    </div>
+                  ))}
+                  {mutualCount > 3 && (
+                    <div className="w-8 h-8 rounded-full border-2 border-[#1A1D24] bg-[#232730] flex items-center justify-center text-[10px] text-white font-medium">
+                      +{mutualCount - 3}
+                    </div>
+                  )}
+                </div>
               </div>
-              <button className="text-[#FF4D4D] text-sm font-bold hover:text-[#E04343] transition-colors flex items-center gap-2 px-3 py-2 -mr-3 active:bg-white/5 rounded-lg">
-                <span>רשימה מלאה</span>
-                <i className="fas fa-chevron-left text-xs" />
-              </button>
-            </div>
+            )}
           </div>
 
           <div className="flex-1" />
 
-          {/* Resync */}
           <div className="text-center mb-6 animate-slide-up" style={{ animationDelay: '0.7s' }}>
             <p className="text-xs text-[#9CA3AF] mb-3">המספר לא נראה הגיוני?</p>
-            <button className="min-h-[44px] px-6 py-2 text-sm font-medium text-[#3B82F6] hover:text-white transition-colors border border-[#3B82F6]/20 rounded-full flex items-center justify-center gap-2 mx-auto active:bg-[#3B82F6]/10">
+            <button onClick={() => nav('/onboarding/sync')} className="min-h-[44px] px-6 py-2 text-sm font-medium text-[#3B82F6] hover:text-white transition-colors border border-[#3B82F6]/20 rounded-full flex items-center justify-center gap-2 mx-auto active:bg-[#3B82F6]/10">
               <i className="fas fa-sync-alt text-xs" />
               <span>בצע סנכרון מחדש</span>
             </button>
           </div>
 
-          <PrimaryButton onClick={() => nav('/home')} className="mb-4 animate-slide-up">
+          <PrimaryButton onClick={() => nav('/home', { replace: true })} className="mb-4 animate-slide-up">
             <span>בוא נתחיל</span>
             <i className="fas fa-arrow-left" />
           </PrimaryButton>

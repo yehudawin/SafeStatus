@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
 import { normalizePhone } from '../lib/phone'
 import OnboardingShell from '../components/OnboardingShell'
-import StatusBar from '../components/StatusBar'
 import OnboardingHeader from '../components/OnboardingHeader'
 import ProgressBar from '../components/ProgressBar'
 import PrimaryButton from '../components/PrimaryButton'
@@ -26,11 +25,26 @@ export default function ContactSyncPage() {
   const [totalScanned, setTotalScanned] = useState(0)
   const [mutualCount, setMutualCount] = useState(0)
   const animRef = useRef<number>(null)
+  const apiDone = useRef(false)
+  const apiFailed = useRef(false)
+  const animDone = useRef(false)
+
+  const tryFinish = () => {
+    if (apiFailed.current) {
+      setState('error')
+      return
+    }
+    if (apiDone.current && animDone.current) {
+      setState('success')
+    }
+  }
 
   const startSync = async () => {
+    apiDone.current = false
+    apiFailed.current = false
+    animDone.current = false
     setState('importing')
     try {
-      // Capacitor Contacts plugin will replace this demo data
       const demoContacts = [
         { phone: '0541234567', name: 'שרה כהן' },
         { phone: '0521234567', name: 'דוד לוי' },
@@ -47,8 +61,11 @@ export default function ContactSyncPage() {
 
       const { data: mutuals } = await supabase.rpc('get_mutual_contacts', { requesting_user_id: user!.id })
       setMutualCount(mutuals?.length ?? 0)
+      apiDone.current = true
+      tryFinish()
     } catch {
-      setState('error')
+      apiFailed.current = true
+      tryFinish()
     }
   }
 
@@ -57,29 +74,30 @@ export default function ContactSyncPage() {
     const target = 482
     const duration = 2500
     const start = Date.now()
+    let cancelled = false
     const tick = () => {
+      if (cancelled) return
       const progress = Math.min((Date.now() - start) / duration, 1)
       setImportCount(Math.floor(progress * target))
       if (progress < 1) {
         animRef.current = requestAnimationFrame(tick)
       } else {
         setTotalScanned(prev => prev || target)
-        setTimeout(() => setState('success'), 500)
+        animDone.current = true
+        tryFinish()
       }
     }
     animRef.current = requestAnimationFrame(tick)
-    return () => { if (animRef.current) cancelAnimationFrame(animRef.current) }
+    return () => { cancelled = true; if (animRef.current) cancelAnimationFrame(animRef.current) }
   }, [state])
 
   return (
     <OnboardingShell>
-      <StatusBar />
       <OnboardingHeader showSkip={state === 'permission'} onSkip={() => nav('/onboarding/ready')} />
       <ProgressBar step={2} />
 
       <div className="flex-1 flex flex-col px-6 relative overflow-y-auto pb-6">
 
-        {/* PERMISSION */}
         {state === 'permission' && (
           <div className="flex flex-col h-full animate-slide-up" style={{ animationDelay: '0.1s' }}>
             <div className="flex justify-center py-4 relative">
@@ -89,7 +107,6 @@ export default function ContactSyncPage() {
                   <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '8px 8px' }} />
                   <i className="fas fa-users text-4xl text-[#FF4D4D] animate-bounce-slight" />
                 </div>
-                {/* Floating avatars */}
                 <div className="absolute top-0 right-0 w-10 h-10 rounded-full bg-[#1A1D24] border-2 border-[#0F1115] overflow-hidden animate-fade-in" style={{ animationDelay: '0.3s' }}>
                   <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg" className="w-full h-full object-cover opacity-80" alt="" />
                 </div>
@@ -128,7 +145,6 @@ export default function ContactSyncPage() {
           </div>
         )}
 
-        {/* IMPORTING */}
         {state === 'importing' && (
           <div className="flex flex-col h-full items-center justify-center animate-fade-in">
             <div className="relative w-40 h-40 mb-8 flex items-center justify-center">
@@ -144,7 +160,6 @@ export default function ContactSyncPage() {
           </div>
         )}
 
-        {/* SUCCESS */}
         {state === 'success' && (
           <div className="flex flex-col h-full animate-slide-up">
             <div className="flex-1 flex flex-col items-center justify-center pt-10">
@@ -167,10 +182,7 @@ export default function ContactSyncPage() {
               </div>
 
               <div className="w-full bg-[#1A1D24]/50 rounded-xl p-4 border border-white/5 mb-4">
-                <div className="text-xs text-[#9CA3AF] mb-3 flex justify-between">
-                  <span>חברים שנמצאו:</span>
-                  <span className="text-[#FF4D4D] text-[10px]">הצג הכל</span>
-                </div>
+                <div className="text-xs text-[#9CA3AF] mb-3">חברים שנמצאו:</div>
                 <div className="flex -space-x-3 space-x-reverse overflow-x-auto py-2 px-1">
                   {AVATARS.map((src, i) => (
                     <div key={i} className="w-10 h-10 rounded-full border-2 border-[#0F1115] relative shrink-0">
@@ -178,9 +190,11 @@ export default function ContactSyncPage() {
                       {i < 2 && <div className="absolute bottom-0 right-0 w-3 h-3 bg-[#10B981] rounded-full border border-[#0F1115]" />}
                     </div>
                   ))}
-                  <div className="w-10 h-10 rounded-full border-2 border-[#0F1115] bg-[#232730] flex items-center justify-center text-xs text-white font-medium shrink-0">
-                    +{Math.max(mutualCount - AVATARS.length, 0)}
-                  </div>
+                  {mutualCount > AVATARS.length && (
+                    <div className="w-10 h-10 rounded-full border-2 border-[#0F1115] bg-[#232730] flex items-center justify-center text-xs text-white font-medium shrink-0">
+                      +{mutualCount - AVATARS.length}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -194,20 +208,19 @@ export default function ContactSyncPage() {
           </div>
         )}
 
-        {/* ERROR */}
         {state === 'error' && (
           <div className="flex flex-col h-full justify-center items-center text-center animate-slide-up">
             <div className="w-20 h-20 rounded-full bg-[#232730] flex items-center justify-center mb-6">
               <i className="fas fa-lock text-3xl text-[#9CA3AF]" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">אין לנו גישה לאנשי הקשר</h2>
-            <p className="text-[#9CA3AF] text-sm mb-8 px-4">כדי שנוכל למצוא את החברים שלך, עליך לאשר גישה לאנשי הקשר בהגדרות המכשיר.</p>
-            <button className="w-full bg-[#1A1D24] border border-white/20 hover:bg-[#232730] text-white font-medium h-12 rounded-xl transition-all mb-3 flex items-center justify-center gap-2">
-              <i className="fas fa-cog text-sm" />
-              <span>פתחו הגדרות</span>
+            <h2 className="text-xl font-bold text-white mb-2">שגיאה בסנכרון</h2>
+            <p className="text-[#9CA3AF] text-sm mb-8 px-4">אירעה שגיאה בסנכרון אנשי הקשר. אנא נסו שוב.</p>
+            <button onClick={() => setState('permission')} className="w-full bg-[#FF4D4D] hover:bg-[#E04343] text-white font-medium h-12 rounded-xl transition-all mb-3 flex items-center justify-center gap-2">
+              <i className="fas fa-redo-alt text-sm" />
+              <span>נסה שוב</span>
             </button>
-            <button onClick={() => setState('permission')} className="text-[#FF4D4D] text-sm font-medium py-2 px-4 hover:bg-[#FF4D4D]/10 rounded-lg transition-colors">
-              נסה שוב
+            <button onClick={() => nav('/onboarding/ready')} className="text-[#9CA3AF] text-sm font-medium py-2 px-4 hover:text-white transition-colors">
+              דלג
             </button>
           </div>
         )}

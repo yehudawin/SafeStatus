@@ -5,7 +5,6 @@ import { formatPhone, toE164 } from '../lib/phone'
 import { haptic } from '../lib/haptic'
 import { useToast } from '../components/Toast'
 import OnboardingShell from '../components/OnboardingShell'
-import StatusBar from '../components/StatusBar'
 import Numpad from '../components/Numpad'
 import PrimaryButton from '../components/PrimaryButton'
 
@@ -33,19 +32,17 @@ export default function LoginPage() {
     const e164 = toE164(phone)
     const { error } = await supabase.auth.signInWithOtp({ phone: e164 })
 
-    setLoading(false)
     if (error) {
+      setLoading(false)
       toast.show('שגיאת תקשורת. אנא נסו שוב.', 'error')
       return
     }
     toast.show('קוד אימות נשלח בהצלחה!', 'success')
-    setTimeout(() => nav('/otp', { state: { phone, e164 } }), 600)
+    nav('/otp', { state: { phone, e164 } })
   }
 
   return (
     <OnboardingShell>
-      <StatusBar />
-
       <div className="flex-1 flex flex-col px-6 pt-8 pb-4 relative z-0">
         {/* Header */}
         <div className="mb-10 text-right animate-slide-up" style={{ animationDelay: '0.1s' }}>
@@ -102,8 +99,8 @@ export default function LoginPage() {
           <div className="text-center mb-6 px-4 animate-slide-up" style={{ animationDelay: '0.3s' }}>
             <p className="text-xs text-[#9CA3AF]/60 leading-5">
               בלחיצה על &quot;שלחו קוד&quot;, אתם מסכימים{' '}
-              <a href="#" className="text-white/80 underline decoration-white/30 hover:text-white">לתנאי השימוש</a>
-              {' '}ו<a href="#" className="text-white/80 underline decoration-white/30 hover:text-white">מדיניות הפרטיות</a>
+              <a href="/terms.html" target="_blank" rel="noopener noreferrer" className="text-white/80 underline decoration-white/30 hover:text-white">לתנאי השימוש</a>
+              {' '}ו<a href="/privacy.html" target="_blank" rel="noopener noreferrer" className="text-white/80 underline decoration-white/30 hover:text-white">מדיניות הפרטיות</a>
               {' '}שלנו.
             </p>
           </div>

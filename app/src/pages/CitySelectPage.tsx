@@ -2,18 +2,12 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { CITIES } from '../lib/cities'
+import { useToast } from '../components/Toast'
 import OnboardingShell from '../components/OnboardingShell'
-import StatusBar from '../components/StatusBar'
 import OnboardingHeader from '../components/OnboardingHeader'
 import ProgressBar from '../components/ProgressBar'
 import PrimaryButton from '../components/PrimaryButton'
-
-const CITIES = [
-  "תל אביב - יפו","ירושלים","חיפה","ראשון לציון","פתח תקווה","אשדוד","נתניה",
-  "באר שבע","חולון","בני ברק","רמת גן","רחובות","אשקלון","בת ים","בית שמש",
-  "הרצליה","כפר סבא","חדרה","מודיעין מכבים רעות","לוד","רעננה","רמלה",
-  "נצרת","ראש העין","נהריה","קריית גת","אילת","עכו","כרמיאל","הוד השרון","טבריה",
-]
 
 function highlightMatch(text: string, filter: string) {
   if (!filter) return text
@@ -31,6 +25,7 @@ function highlightMatch(text: string, filter: string) {
 export default function CitySelectPage() {
   const nav = useNavigate()
   const { user, refreshProfile } = useAuth()
+  const toast = useToast()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -43,14 +38,19 @@ export default function CitySelectPage() {
   const proceed = async () => {
     if (!selected || !user) return
     setLoading(true)
-    await supabase.from('profiles').update({ city: selected }).eq('id', user.id)
-    await refreshProfile()
-    nav('/onboarding/sync')
+    try {
+      const { error } = await supabase.from('profiles').update({ city: selected }).eq('id', user.id)
+      if (error) throw error
+      await refreshProfile()
+      nav('/onboarding/sync')
+    } catch {
+      toast.show('שגיאה בשמירת העיר. נסו שוב.', 'error')
+      setLoading(false)
+    }
   }
 
   return (
     <OnboardingShell>
-      <StatusBar />
       <OnboardingHeader showSkip onSkip={() => nav('/onboarding/sync')} />
       <ProgressBar step={1} />
 
