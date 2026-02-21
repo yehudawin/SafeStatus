@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <script>
+        window.FontAwesomeConfig = {
+          autoReplaceSvg: 'nest'
+        };
+      </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SafeStatus - OTP Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0F1115', // Deep dark background
+                        surface: '#1A1D24', // Slightly lighter for cards/inputs
+                        surfaceHighlight: '#232730',
+                        primary: '#FF4D4D', // Red emergency color (SafeStatus branding)
+                        primaryHover: '#E04343',
+                        secondary: '#3B82F6', // Blue for informational/secondary
+                        text: {
+                            main: '#FFFFFF',
+                            muted: '#9CA3AF',
+                            placeholder: '#6B7280'
+                        },
+                        success: '#10B981',
+                        error: '#EF4444',
+                        warning: '#F59E0B'
+                    },
+                    fontFamily: {
+                        sans: ['Heebo', 'Assistant', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['Courier New', 'Courier', 'monospace'] // For OTP digits
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(255, 77, 77, 0.15)',
+                        'input-focus': '0 0 0 2px rgba(255, 77, 77, 0.3)',
+                        'key-press': 'inset 0 2px 10px rgba(0,0,0,0.3)',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'pop-in': 'popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+                        },
+                        popIn: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #0F1115;
+            color: #FFFFFF;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hide native spin buttons */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+
+        .keypad-btn:active {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: scale(0.95);
+        }
+        
+        .safe-status-gradient {
+            background: linear-gradient(135deg, #FF4D4D 0%, #FF8F8F 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #ffffff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            width: 90%;
+            max-width: 400px;
+            pointer-events: none;
+        }
+        
+        .toast {
+            background: #232730;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            border-right: 4px solid #3B82F6;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast.error { border-right-color: #EF4444; }
+        .toast.success { border-right-color: #10B981; }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-color: #0F1115;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+
+        /* OTP Input Styling */
+        .otp-box {
+            transition: all 0.2s ease;
+            caret-color: transparent; /* Hide cursor */
+        }
+        .otp-box.active {
+            border-color: #FF4D4D;
+            box-shadow: 0 0 0 1px rgba(255, 77, 77, 0.3);
+            background-color: rgba(255, 77, 77, 0.05);
+        }
+        .otp-box.filled {
+            border-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .otp-box.error {
+            border-color: #EF4444;
+            color: #EF4444;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .otp-digit {
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="bg-black flex justify-center items-center min-h-screen">
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Main App Container -->
+    <div class="app-container" id="app-root">
+        
+        <!-- Status Bar Simulation -->
+        <div class="h-10 w-full flex justify-between items-center px-6 text-xs font-medium text-white/70 select-none z-10 pt-2">
+            <span>09:42</span>
+            <div class="flex items-center gap-1.5">
+                <i class="fas fa-signal text-[10px]"></i>
+                <i class="fas fa-wifi text-[10px]"></i>
+                <i class="fas fa-battery-full text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- Header / Navigation -->
+        <div class="px-6 pt-6 flex items-center justify-between mb-8 animate-slide-up" style="animation-delay: 0.05s;">
+            <button onclick="window.history.back()" class="w-10 h-10 rounded-full bg-surface hover:bg-surfaceHighlight flex items-center justify-center text-white transition-colors border border-white/5">
+                <i class="fas fa-arrow-right text-sm"></i>
+            </button>
+            <div class="text-sm font-medium text-text-muted">אימות מספר טלפון</div>
+            <div class="w-10"></div> <!-- Spacer for centering -->
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 flex flex-col px-6 relative z-0">
+            
+            <!-- Instructions Section -->
+            <div class="text-right mb-8 animate-slide-up" style="animation-delay: 0.1s;">
+                <h1 class="text-2xl font-bold text-white mb-2">קוד האימות נשלח</h1>
+                <div class="flex items-center gap-2 text-text-muted text-lg">
+                    <span>אל המספר</span>
+                    <span class="text-white dir-ltr font-mono tracking-wide">054-123-4567</span>
+                    <button class="text-primary text-sm font-medium min-w-[44px] min-h-[44px] flex items-center justify-center rounded hover:bg-primary/10 transition-colors mr-1" aria-label="ערוך מספר טלפון">
+                        עריכה
+                    </button>
+                </div>
+            </div>
+
+            <!-- OTP Input Section -->
+            <div class="mb-8 animate-slide-up" style="animation-delay: 0.2s;">
+                <div class="flex justify-between gap-2 mb-2" id="otp-container" dir="ltr">
+                    <!-- Standard LTR flow for numeric OTP boxes to ensure correct sequence for screen readers and logic -->
+                    <div class="otp-box w-12 h-14 rounded-xl border border-white/10 bg-surface flex items-center justify-center text-2xl font-bold text-white transition-all" data-index="0"></div>
+                    <div class="otp-box w-12 h-14 rounded-xl border border-white/10 bg-surface flex items-center justify-center text-2xl font-bold text-white transition-all" data-index="1"></div>
+                    <div class="otp-box w-12 h-14 rounded-xl border border-white/10 bg-surface flex items-center justify-center text-2xl font-bold text-white transition-all" data-index="2"></div>
+                    <div class="otp-box w-12 h-14 rounded-xl border border-white/10 bg-surface flex items-center justify-center text-2xl font-bold text-white transition-all" data-index="3"></div>
+                    <div class="otp-box w-12 h-14 rounded-xl border border-white/10 bg-surface flex items-center justify-center text-2xl font-bold text-white transition-all" data-index="4"></div>
+                    <div class="otp-box w-12 h-14 rounded-xl border border-white/10 bg-surface flex items-center justify-center text-2xl font-bold text-white transition-all" data-index="5"></div>
+                </div>
+                
+                <!-- Error Message / Hint -->
+                <div class="h-6 flex items-center mt-2">
+                    <p id="otp-error-msg" aria-live="polite" class="text-error text-xs opacity-0 transition-opacity duration-200 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>הקוד שהוזן שגוי, אנא נסו שוב</span>
+                    </p>
+                    <p id="otp-hint-msg" class="text-secondary text-xs opacity-100 transition-opacity duration-200 flex items-center gap-1 mr-auto">
+                        <i class="fas fa-magic"></i>
+                        <span>זיהוי SMS אוטומטי פעיל</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Resend Timer -->
+            <div class="flex justify-center items-center mb-6 animate-slide-up" style="animation-delay: 0.3s;">
+                <div id="timer-container" class="text-text-muted text-sm bg-surface/50 px-4 py-2 rounded-full border border-white/5">
+                    שליחה חוזרת בעוד <span id="countdown" class="font-mono w-8 inline-block text-center text-white">00:45</span>
+                </div>
+                <button id="resend-btn" class="hidden text-secondary hover:text-white text-sm font-medium transition-colors flex items-center gap-2 px-4 py-2 rounded-full hover:bg-surface border border-transparent hover:border-white/10">
+                    <i class="fas fa-redo-alt text-xs"></i>
+                    שלחו לי קוד חדש
+                </button>
+            </div>
+
+            <!-- Spacer -->
+            <div class="flex-grow"></div>
+
+            <!-- Primary CTA -->
+            <div class="mb-6 animate-slide-up" style="animation-delay: 0.4s;">
+                <button id="verify-btn" disabled class="w-full bg-primary hover:bg-primaryHover text-white font-bold h-14 rounded-xl shadow-lg shadow-primary/20 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 text-lg group">
+                    <span id="btn-text">אימות וכניסה</span>
+                    <i class="fas fa-check opacity-0 -ml-4 group-enabled:opacity-100 group-enabled:ml-0 transition-all duration-300"></i>
+                    <div id="btn-loader" class="spinner hidden"></div>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Custom Numeric Keypad -->
+        <div class="bg-surface pb-8 pt-4 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)] z-20 mt-auto animate-slide-up border-t border-white/5" style="animation-delay: 0.5s;">
+            <div class="w-12 h-1 bg-white/10 rounded-full mx-auto mb-6"></div>
+            
+            <div class="grid grid-cols-3 gap-y-5 px-6 dir-ltr">
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('1')">1</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('2')">2</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('3')">3</button>
+                
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('4')">4</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('5')">5</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('6')">6</button>
+                
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('7')">7</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('8')">8</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('9')">9</button>
+                
+                <div class="h-14 flex items-center justify-center"></div> <!-- Empty space -->
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="handleKeypad('0')">0</button>
+                <button class="keypad-btn h-14 rounded-full text-xl text-white hover:bg-white/5 transition-colors select-none flex items-center justify-center" onclick="handleDelete()">
+                    <i class="fas fa-backspace opacity-70"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Standard Components (Required by prompt) -->
+    <div class="hidden">
+        <!-- Navigation Bar -->
+        <nav class="bg-surface p-4 border-b border-white/10">
+            <div class="flex justify-between items-center">
+                <div class="text-xl font-bold text-white">SafeStatus</div>
+                <div class="flex gap-4">
+                    <a href="#" class="text-text-muted hover:text-white">Home</a>
+                    <a href="#" class="text-text-muted hover:text-white">Settings</a>
+                    <div class="relative">
+                        <button class="text-white"><i class="fas fa-user"></i></button>
+                    </div>
+                </div>
+                <button class="md:hidden text-white"><i class="fas fa-bars"></i></button>
+            </div>
+        </nav>
+
+        <!-- Standard Buttons -->
+        <button class="bg-secondary text-white px-4 py-2 rounded-lg">Secondary</button>
+        <button class="border border-white/30 text-white px-4 py-2 rounded-lg">Outline</button>
+        <button class="text-white hover:bg-white/10 px-4 py-2 rounded-lg">Ghost</button>
+
+        <!-- Standard Cards -->
+        <div class="bg-surface p-6 rounded-xl shadow-lg border border-white/5">
+            <h3 class="text-lg font-bold text-white mb-2">Card Title</h3>
+            <p class="text-text-muted">Card content goes here.</p>
+        </div>
+
+        <!-- Tables -->
+        <table class="w-full text-right text-white">
+            <thead class="bg-surfaceHighlight">
+                <tr><th class="p-3">Header 1</th><th class="p-3">Header 2</th></tr>
+            </thead>
+            <tbody>
+                <tr class="border-b border-white/10"><td class="p-3">Data 1</td><td class="p-3">Data 2</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Charts Placeholders -->
+        <div class="h-[200px] bg-surface rounded-xl">Chart Area</div>
+        
+        <!-- Forms -->
+        <form class="space-y-4">
+            <input type="text" placeholder="Input" class="w-full bg-surface border border-white/10 rounded-lg p-3 text-white">
+            <select class="w-full bg-surface border border-white/10 rounded-lg p-3 text-white"><option>Option 1</option></select>
+            <div class="flex items-center gap-2"><input type="checkbox" id="chk"><label for="chk" class="text-white">Check</label></div>
+        </form>
+    </div>
+
+    <script>
+        // State
+        let otpValue = [];
+        const otpLength = 6;
+        const boxes = document.querySelectorAll('.otp-box');
+        const verifyBtn = document.getElementById('verify-btn');
+        const errorMsg = document.getElementById('otp-error-msg');
+        const hintMsg = document.getElementById('otp-hint-msg');
+        
+        // Timer Logic
+        let timeLeft = 45;
+        const countdownEl = document.getElementById('countdown');
+        const timerContainer = document.getElementById('timer-container');
+        const resendBtn = document.getElementById('resend-btn');
+
+        const timer = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            countdownEl.textContent = `0${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                timerContainer.classList.add('hidden');
+                resendBtn.classList.remove('hidden');
+            }
+        }, 1000);
+
+        resendBtn.addEventListener('click', () => {
+            resendBtn.classList.add('hidden');
+            timerContainer.classList.remove('hidden');
+            timeLeft = 45;
+            showToast('קוד חדש נשלח בהצלחה', 'success');
+            // Restart timer logic would go here
+        });
+
+        // Keypad Handling
+        function handleKeypad(num) {
+            if (otpValue.length < otpLength) {
+                otpValue.push(num);
+                updateUI();
+                triggerHaptic();
+            }
+        }
+
+        function handleDelete() {
+            if (otpValue.length > 0) {
+                otpValue.pop();
+                updateUI();
+                triggerHaptic();
+            }
+        }
+
+        // UI Updates
+        function updateUI() {
+            // Reset Error State
+            boxes.forEach(box => box.classList.remove('error'));
+            errorMsg.classList.add('opacity-0');
+            hintMsg.classList.remove('opacity-0');
+
+            // Update Boxes
+            boxes.forEach((box, index) => {
+                // Clear content
+                box.innerHTML = '';
+                box.className = 'otp-box w-12 h-14 rounded-xl border border-white/10 bg-surface flex items-center justify-center text-2xl font-bold text-white transition-all';
+                
+                if (index < otpValue.length) {
+                    // Filled state
+                    box.classList.add('filled', 'border-white/30');
+                    const span = document.createElement('span');
+                    span.textContent = otpValue[index];
+                    span.className = 'otp-digit';
+                    box.appendChild(span);
+                }
+                
+                if (index === otpValue.length) {
+                    // Active state (cursor position)
+                    box.classList.add('active');
+                }
+            });
+
+            // Button State
+            if (otpValue.length === otpLength) {
+                verifyBtn.disabled = false;
+                verifyBtn.classList.add('shadow-glow');
+            } else {
+                verifyBtn.disabled = true;
+                verifyBtn.classList.remove('shadow-glow');
+            }
+        }
+
+        function triggerHaptic() {
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        // Verify Logic
+        verifyBtn.addEventListener('click', () => {
+            const code = otpValue.join('');
+            const btnText = document.getElementById('btn-text');
+            const btnLoader = document.getElementById('btn-loader');
+            const checkIcon = verifyBtn.querySelector('.fa-check');
+
+            // Loading state
+            btnText.classList.add('hidden');
+            checkIcon.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            verifyBtn.disabled = true;
+
+            setTimeout(() => {
+                if (code === '123456') { // Demo success code
+                    showToast('האימות הצליח! מתחבר...', 'success');
+                    setTimeout(() => {
+                        // Navigate to onboarding
+                        console.log('Navigate to onboarding');
+                    }, 1000);
+                } else {
+                    // Error state
+                    btnText.classList.remove('hidden');
+                    checkIcon.classList.remove('hidden');
+                    btnLoader.classList.add('hidden');
+                    verifyBtn.disabled = false;
+                    
+                    // Show error UI
+                    boxes.forEach(box => box.classList.add('error'));
+                    errorMsg.classList.remove('opacity-0');
+                    hintMsg.classList.add('opacity-0');
+                    
+                    if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+                    
+                    // Clear input after delay
+                    setTimeout(() => {
+                        otpValue = [];
+                        updateUI();
+                    }, 1000);
+                }
+            }, 1500);
+        });
+
+        // Toast Notification
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-${icon} ${type === 'error' ? 'text-error' : (type === 'success' ? 'text-success' : 'text-secondary')}"></i>
+                    <span class="text-sm font-medium text-white">${message}</span>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-white/50 hover:text-white mr-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            void toast.offsetWidth; // Trigger reflow
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Keyboard support for desktop testing
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') {
+                handleKeypad(e.key);
+            } else if (e.key === 'Backspace') {
+                handleDelete();
+            } else if (e.key === 'Enter' && !verifyBtn.disabled) {
+                verifyBtn.click();
+            }
+        });
+
+        // Initialize UI
+        updateUI();
+        
+        // Simulate auto-paste (demo feature)
+        /*
+        setTimeout(() => {
+            showToast('קוד 123456 הועתק מהודעת SMS', 'info');
+            // In a real app, we'd paste it here
+        }, 3000);
+        */
+    </script>
+</body>
+</html>

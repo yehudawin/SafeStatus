@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <script>
+        window.FontAwesomeConfig = {
+          autoReplaceSvg: 'nest'
+        };
+      </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SafeStatus - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0F1115', // Deep dark background
+                        surface: '#1A1D24', // Slightly lighter for cards/inputs
+                        surfaceHighlight: '#232730',
+                        primary: '#FF4D4D', // Red emergency color (SafeStatus branding)
+                        primaryHover: '#E04343',
+                        secondary: '#3B82F6', // Blue for informational/secondary
+                        text: {
+                            main: '#FFFFFF',
+                            muted: '#9CA3AF',
+                            placeholder: '#6B7280'
+                        },
+                        success: '#10B981',
+                        error: '#EF4444',
+                        warning: '#F59E0B'
+                    },
+                    fontFamily: {
+                        sans: ['Heebo', 'Assistant', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(255, 77, 77, 0.15)',
+                        'input-focus': '0 0 0 2px rgba(255, 77, 77, 0.3)',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #0F1115;
+            color: #FFFFFF;
+            -webkit-tap-highlight-color: transparent;
+            /* Prevent scrolling on mobile to simulate app feel */
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom Scrollbar for content area if needed */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        /* Hide native spin buttons */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+
+        /* Keypad press effect */
+        .keypad-btn:active {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: scale(0.95);
+        }
+        
+        .safe-status-gradient {
+            background: linear-gradient(135deg, #FF4D4D 0%, #FF8F8F 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Loader */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #ffffff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            width: 90%;
+            max-width: 400px;
+            pointer-events: none;
+        }
+        
+        .toast {
+            background: #232730;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            border-right: 4px solid #3B82F6;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast.error { border-right-color: #EF4444; }
+        .toast.success { border-right-color: #10B981; }
+
+        /* Mobile app container simulation */
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-color: #0F1115;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            overflow-y: auto; /* Allow scrolling for small screens */
+        }
+    </style>
+</head>
+<body class="bg-black flex justify-center items-center min-h-screen">
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Main App Container -->
+    <div class="app-container" id="app-root">
+        
+        <!-- Status Bar Simulation -->
+        <div class="h-10 w-full flex justify-between items-center px-6 text-xs font-medium text-white/70 select-none z-10 pt-2">
+            <span>09:41</span>
+            <div class="flex items-center gap-1.5">
+                <i class="fas fa-signal text-[10px]"></i>
+                <i class="fas fa-wifi text-[10px]"></i>
+                <i class="fas fa-battery-full text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 flex flex-col px-6 pt-8 pb-4 relative z-0">
+            
+            <!-- Header Section -->
+            <div class="mb-10 text-right animate-slide-up" style="animation-delay: 0.1s;">
+                <div class="w-12 h-12 bg-surfaceHighlight rounded-2xl flex items-center justify-center mb-6 shadow-lg border border-white/5">
+                    <i class="fas fa-shield-heart text-primary text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-white mb-3 tracking-tight leading-tight">
+                    ברוכים הבאים ל-<span class="safe-status-gradient">SafeStatus</span>
+                </h1>
+                <p class="text-text-muted text-lg leading-relaxed">
+                    הכניסו את מספר הטלפון כדי להתחבר ולקבל עדכונים בזמן אמת.
+                </p>
+            </div>
+
+            <!-- Input Section -->
+            <div class="flex-1 flex flex-col animate-slide-up" style="animation-delay: 0.2s;">
+                
+                <div class="relative group mb-8">
+                    <label class="block text-sm font-medium text-text-muted mb-2 pr-1">מספר טלפון נייד</label>
+                    <div class="flex items-center bg-surface border border-white/10 rounded-xl h-14 px-4 transition-all duration-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30 focus-within:shadow-glow group-hover:border-white/20" id="phone-input-container">
+                        
+                        <!-- Country Flag & Code -->
+                        <div class="flex items-center pl-3 border-l border-white/10 h-6">
+                            <span class="text-xl ml-2">🇮🇱</span>
+                            <span class="text-white dir-ltr font-mono text-lg tracking-wide">+972</span>
+                        </div>
+                        
+                        <!-- Phone Input -->
+                        <input 
+                            type="tel" 
+                            id="phone-input" 
+                            class="w-full bg-transparent border-none text-white text-xl font-mono tracking-widest placeholder-text-placeholder focus:ring-0 px-3 py-2 text-left dir-ltr"
+                            placeholder="05X-XXX-XXXX"
+                            maxlength="12"
+                            autocomplete="tel"
+                            inputmode="none"
+                            aria-label="מספר טלפון נייד"
+                        >
+                        
+                        <!-- Status Icon -->
+                        <div class="w-6 flex items-center justify-center">
+                            <i id="input-status-icon" class="fas fa-check-circle text-success opacity-0 transition-opacity duration-300"></i>
+                        </div>
+                    </div>
+                    <p id="validation-msg" class="text-error text-xs mt-2 pr-1 h-4 opacity-0 transition-opacity duration-200">מספר הטלפון אינו תקין</p>
+                </div>
+
+                <!-- Spacer -->
+                <div class="flex-grow"></div>
+
+                <!-- Legal Text -->
+                <div class="text-center mb-6 px-4 animate-slide-up" style="animation-delay: 0.3s;">
+                    <p class="text-xs text-text-muted/60 leading-5">
+                        בלחיצה על "שלחו קוד", אתם מסכימים 
+                        <a href="#" class="text-white/80 underline decoration-white/30 hover:text-white">לתנאי השימוש</a>
+                        ו<a href="#" class="text-white/80 underline decoration-white/30 hover:text-white">מדיניות הפרטיות</a>
+                        שלנו.
+                    </p>
+                </div>
+
+                <!-- CTA Button -->
+                <div class="mb-4 animate-slide-up" style="animation-delay: 0.4s;">
+                    <button id="submit-btn" class="w-full bg-primary hover:bg-primaryHover text-white font-bold h-14 rounded-xl shadow-lg shadow-primary/20 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 text-lg">
+                        <span id="btn-text">שלחו קוד</span>
+                        <div id="btn-loader" class="spinner hidden"></div>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Custom Numeric Keypad - Removed absolute positioning to prevent overlap -->
+        <div class="bg-surface pb-8 pt-4 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)] z-20 mt-auto animate-slide-up" style="animation-delay: 0.5s;">
+            <div class="w-12 h-1 bg-white/10 rounded-full mx-auto mb-6"></div>
+            
+            <div class="grid grid-cols-3 gap-y-4 px-6 dir-ltr">
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('1')">1</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('2')">2</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('3')">3</button>
+                
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('4')">4</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('5')">5</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('6')">6</button>
+                
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('7')">7</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('8')">8</button>
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('9')">9</button>
+                
+                <div class="h-14 flex items-center justify-center"></div> <!-- Empty space -->
+                <button class="keypad-btn h-14 rounded-full text-2xl font-medium text-white hover:bg-white/5 transition-colors select-none" onclick="appendNumber('0')">0</button>
+                <button class="keypad-btn h-14 rounded-full text-xl text-white hover:bg-white/5 transition-colors select-none flex items-center justify-center" onclick="deleteNumber()">
+                    <i class="fas fa-backspace opacity-70"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden standard components required by prompt -->
+    <div class="hidden">
+        <!-- Navigation Bar -->
+        <nav class="bg-surface p-4 border-b border-white/10">
+            <div class="flex justify-between items-center">
+                <div class="text-xl font-bold text-white">Logo</div>
+                <div class="flex gap-4">
+                    <a href="#" class="text-text-muted hover:text-white">Home</a>
+                    <a href="#" class="text-text-muted hover:text-white">About</a>
+                    <div class="relative">
+                        <button class="text-white"><i class="fas fa-user"></i></button>
+                    </div>
+                </div>
+                <button class="md:hidden text-white"><i class="fas fa-bars"></i></button>
+            </div>
+        </nav>
+
+        <!-- Standard Buttons -->
+        <button class="bg-secondary text-white px-4 py-2 rounded-lg">Secondary</button>
+        <button class="border border-white/30 text-white px-4 py-2 rounded-lg">Outline</button>
+        <button class="text-white hover:bg-white/10 px-4 py-2 rounded-lg">Ghost</button>
+
+        <!-- Standard Cards -->
+        <div class="bg-surface p-6 rounded-xl shadow-lg border border-white/5">
+            <h3 class="text-lg font-bold text-white mb-2">Card Title</h3>
+            <p class="text-text-muted">Card content goes here.</p>
+        </div>
+
+        <!-- Tables -->
+        <table class="w-full text-right text-white">
+            <thead class="bg-surfaceHighlight">
+                <tr><th class="p-3">Header 1</th><th class="p-3">Header 2</th></tr>
+            </thead>
+            <tbody>
+                <tr class="border-b border-white/10"><td class="p-3">Data 1</td><td class="p-3">Data 2</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Charts Placeholders -->
+        <div class="h-[200px] bg-surface rounded-xl">Chart Area</div>
+    </div>
+
+    <script>
+        // State
+        let phoneNumber = '';
+        const maxLen = 10; // Israeli numbers are 10 digits (e.g. 050-123-4567)
+
+        // DOM Elements
+        const phoneInput = document.getElementById('phone-input');
+        const phoneContainer = document.getElementById('phone-input-container');
+        const statusIcon = document.getElementById('input-status-icon');
+        const validationMsg = document.getElementById('validation-msg');
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnLoader = document.getElementById('btn-loader');
+
+        // Prevent virtual keyboard on mobile but allow focus for accessibility
+        phoneInput.addEventListener('focus', (e) => {
+            e.preventDefault();
+            phoneContainer.classList.add('border-primary', 'ring-1', 'ring-primary/30', 'shadow-glow');
+        });
+
+        phoneInput.addEventListener('blur', () => {
+            phoneContainer.classList.remove('border-primary', 'ring-1', 'ring-primary/30', 'shadow-glow');
+        });
+
+        // Initial Focus Effect
+        window.onload = () => {
+            // Simulate focus on load
+            phoneContainer.classList.add('border-primary', 'ring-1', 'ring-primary/30', 'shadow-glow');
+            setTimeout(() => {
+                phoneContainer.classList.remove('border-primary', 'ring-1', 'ring-primary/30', 'shadow-glow');
+                phoneContainer.classList.add('border-white/10');
+            }, 1000);
+        };
+
+        // Keypad Logic
+        function appendNumber(num) {
+            if (phoneNumber.length < maxLen) {
+                phoneNumber += num;
+                updateDisplay();
+                validateInput();
+                triggerHaptic();
+            }
+        }
+
+        function deleteNumber() {
+            if (phoneNumber.length > 0) {
+                phoneNumber = phoneNumber.slice(0, -1);
+                updateDisplay();
+                validateInput();
+                triggerHaptic();
+            }
+        }
+
+        // Format: 05X-XXX-XXXX
+        function formatPhoneNumber(value) {
+            if (!value) return '';
+            
+            // Just basic formatting for display
+            let formatted = value;
+            if (value.length > 3) {
+                formatted = value.slice(0, 3) + '-' + value.slice(3);
+            }
+            if (value.length > 6) {
+                formatted = formatted.slice(0, 7) + '-' + formatted.slice(7);
+            }
+            return formatted;
+        }
+
+        function updateDisplay() {
+            phoneInput.value = formatPhoneNumber(phoneNumber);
+            
+            // Visual active state for input
+            if (phoneNumber.length > 0) {
+                phoneContainer.classList.add('border-primary', 'ring-1', 'ring-primary/30');
+                phoneContainer.classList.remove('border-white/10');
+            } else {
+                phoneContainer.classList.remove('border-primary', 'ring-1', 'ring-primary/30');
+                phoneContainer.classList.add('border-white/10');
+            }
+        }
+
+        function validateInput() {
+            // Basic Israeli mobile regex: 05 + 8 digits
+            const isValid = /^05\d{8}$/.test(phoneNumber);
+            
+            if (isValid) {
+                statusIcon.classList.remove('opacity-0', 'fa-times-circle', 'text-error');
+                statusIcon.classList.add('fa-check-circle', 'text-success');
+                validationMsg.classList.add('opacity-0');
+                submitBtn.disabled = false;
+                submitBtn.classList.add('shadow-glow');
+            } else {
+                if (phoneNumber.length === maxLen) {
+                    // Full length but invalid prefix
+                    statusIcon.classList.remove('opacity-0', 'fa-check-circle', 'text-success');
+                    statusIcon.classList.add('fa-times-circle', 'text-error');
+                    validationMsg.innerText = "מספר הטלפון חייב להתחיל ב-05";
+                    validationMsg.classList.remove('opacity-0');
+                } else {
+                    // Incomplete
+                    statusIcon.classList.add('opacity-0');
+                    validationMsg.classList.add('opacity-0');
+                }
+                submitBtn.disabled = true; // Keep disabled until valid
+                submitBtn.classList.remove('shadow-glow');
+            }
+            
+            // Enable button for demo purposes if length > 3
+            if (phoneNumber.length > 9) {
+                 submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+
+        function triggerHaptic() {
+            if (navigator.vibrate) {
+                navigator.vibrate(10);
+            }
+        }
+
+        // Submit Logic
+        submitBtn.addEventListener('click', () => {
+            if (phoneNumber.length < 9) return;
+            
+            // Loading State
+            btnText.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            submitBtn.disabled = true;
+            
+            // Simulate API Call
+            setTimeout(() => {
+                // Random Success/Failure
+                const isSuccess = Math.random() > 0.3;
+                
+                if (isSuccess) {
+                    showToast('קוד אימות נשלח בהצלחה!', 'success');
+                    setTimeout(() => {
+                        // Reset for demo
+                        btnText.classList.remove('hidden');
+                        btnLoader.classList.add('hidden');
+                        submitBtn.disabled = false;
+                        // In real app, navigate to OTP screen
+                    }, 1000);
+                } else {
+                    showToast('שגיאת תקשורת. אנא נסו שוב.', 'error');
+                    btnText.classList.remove('hidden');
+                    btnLoader.classList.add('hidden');
+                    submitBtn.disabled = false;
+                    
+                    // Shake animation on input
+                    phoneContainer.classList.add('animate-pulse');
+                    setTimeout(() => phoneContainer.classList.remove('animate-pulse'), 500);
+                }
+            }, 1500);
+        });
+
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-${icon} ${type === 'error' ? 'text-error' : (type === 'success' ? 'text-success' : 'text-secondary')}"></i>
+                    <span class="text-sm font-medium text-white">${message}</span>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-white/50 hover:text-white mr-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger reflow
+            void toast.offsetWidth;
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Initial state
+        submitBtn.disabled = true;
+    </script>
+</body>
+</html>

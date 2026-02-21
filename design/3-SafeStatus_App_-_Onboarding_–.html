@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <script>
+        window.FontAwesomeConfig = {
+          autoReplaceSvg: 'nest'
+        };
+      </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SafeStatus - Choose City</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#0F1115', // Deep dark background
+                        surface: '#1A1D24', // Slightly lighter for cards/inputs
+                        surfaceHighlight: '#232730',
+                        primary: '#FF4D4D', // Red emergency color (SafeStatus branding)
+                        primaryHover: '#E04343',
+                        secondary: '#3B82F6', // Blue for informational/secondary
+                        text: {
+                            main: '#FFFFFF',
+                            muted: '#9CA3AF',
+                            placeholder: '#6B7280'
+                        },
+                        success: '#10B981',
+                        error: '#EF4444',
+                        warning: '#F59E0B'
+                    },
+                    fontFamily: {
+                        sans: ['Heebo', 'Assistant', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(255, 77, 77, 0.15)',
+                        'bottom-sheet': '0 -4px 20px rgba(0,0,0,0.4)',
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                        'fade-in': 'fadeIn 0.2s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #0F1115;
+            color: #FFFFFF;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden; 
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom Scrollbar for City List */
+        .city-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .city-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .city-list::-webkit-scrollbar-thumb {
+            background-color: #232730;
+            border-radius: 20px;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-color: #0F1115;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        }
+
+        /* City Item Selection Animation */
+        .city-item {
+            transition: all 0.2s ease;
+        }
+        .city-item.selected {
+            background-color: rgba(255, 77, 77, 0.1);
+            border-color: #FF4D4D;
+        }
+        .city-item:active {
+            transform: scale(0.98);
+        }
+
+        /* Search Input Focus */
+        .search-input:focus-within {
+            border-color: #FF4D4D;
+            box-shadow: 0 0 0 1px rgba(255, 77, 77, 0.3);
+        }
+
+        /* Ripple Effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-black flex justify-center items-center min-h-screen">
+
+    <div class="app-container" id="app-root">
+        
+        <!-- Status Bar Simulation -->
+        <div class="h-10 w-full flex justify-between items-center px-6 text-xs font-medium text-white/70 select-none z-10 pt-2 bg-[#0F1115]">
+            <span>09:43</span>
+            <div class="flex items-center gap-1.5">
+                <i class="fas fa-signal text-[10px]"></i>
+                <i class="fas fa-wifi text-[10px]"></i>
+                <i class="fas fa-battery-full text-[10px]"></i>
+            </div>
+        </div>
+
+        <!-- Header Navigation -->
+        <div class="px-6 pt-4 pb-2 flex items-center justify-between bg-[#0F1115] z-10">
+            <!-- Back Button (Right in RTL) -->
+            <button onclick="window.history.back()" class="w-10 h-10 rounded-full bg-surface hover:bg-surfaceHighlight flex items-center justify-center text-white transition-colors border border-white/5">
+                <i class="fas fa-arrow-right text-sm"></i>
+            </button>
+            
+            <!-- Skip Button (Left in RTL) -->
+            <button class="text-sm font-medium text-text-muted hover:text-white transition-colors px-2 py-1">
+                דילוג
+            </button>
+        </div>
+
+        <!-- Progress Indicator (Step 1 of 3) -->
+        <div class="px-6 py-4">
+            <div class="flex gap-2 dir-rtl">
+                <div class="h-1 flex-1 bg-primary rounded-full"></div>
+                <div class="h-1 flex-1 bg-surfaceHighlight rounded-full"></div>
+                <div class="h-1 flex-1 bg-surfaceHighlight rounded-full"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-xs font-medium text-text-muted">
+                <span class="text-primary">בחירת עיר</span>
+                <span>סנכרון</span>
+                <span>סיום</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col px-6 overflow-hidden">
+            
+            <!-- Title Section -->
+            <div class="mb-6 animate-slide-up" style="animation-delay: 0.1s;">
+                <h1 class="text-2xl font-bold text-white mb-2">באיזו עיר אתם גרים?</h1>
+                <p class="text-text-muted text-sm">כך נוכל לעדכן אתכם על אזעקות באזורכם בזמן אמת.</p>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="mb-4 relative animate-slide-up search-input rounded-xl transition-all duration-200" style="animation-delay: 0.15s;">
+                <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-text-placeholder text-lg"></i>
+                </div>
+                <input type="text" id="city-search" placeholder="חפשו עיר או יישוב..." 
+                       class="w-full h-14 bg-surface border border-white/10 rounded-xl pr-12 pl-12 text-white placeholder-text-placeholder focus:outline-none focus:bg-surfaceHighlight transition-colors text-right">
+                <div id="clear-search" class="absolute inset-y-0 left-4 flex items-center cursor-pointer hidden">
+                    <i class="fas fa-times-circle text-text-muted hover:text-white transition-colors"></i>
+                </div>
+            </div>
+
+            <!-- Cities List Container -->
+            <div class="flex-1 overflow-hidden relative bg-surface/30 rounded-2xl border border-white/5 mb-4 animate-slide-up" style="animation-delay: 0.2s;">
+                
+                <!-- Loading Skeleton (Hidden by default, toggle with JS for demo) -->
+                <div id="loading-skeleton" class="hidden absolute inset-0 p-4 space-y-3 z-20 bg-[#0F1115]">
+                    <div class="h-14 bg-surface rounded-xl animate-pulse"></div>
+                    <div class="h-14 bg-surface rounded-xl animate-pulse delay-75"></div>
+                    <div class="h-14 bg-surface rounded-xl animate-pulse delay-150"></div>
+                    <div class="h-14 bg-surface rounded-xl animate-pulse delay-200"></div>
+                    <div class="h-14 bg-surface rounded-xl animate-pulse delay-300"></div>
+                </div>
+
+                <!-- Empty State (Hidden) -->
+                <div id="empty-state" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-10">
+                    <div class="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-map-marker-alt text-text-muted text-2xl opacity-50"></i>
+                    </div>
+                    <h3 class="text-white font-medium mb-1">לא נמצאו תוצאות</h3>
+                    <p class="text-text-muted text-sm">נסו לחפש עיר אחרת או בדקו את האיות.</p>
+                </div>
+
+                <!-- List Content -->
+                <div class="city-list h-full overflow-y-auto p-2 space-y-2" id="cities-container">
+                    <!-- Cities will be injected via JS -->
+                </div>
+                
+                <!-- Scroll Fade Effect Bottom -->
+                <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#0F1115] to-transparent pointer-events-none"></div>
+            </div>
+
+            <!-- Bottom Action Area -->
+            <div class="pb-8 pt-2 animate-slide-up" style="animation-delay: 0.25s;">
+                <button id="continue-btn" disabled class="w-full bg-primary hover:bg-primaryHover text-white font-bold h-14 rounded-xl shadow-lg shadow-primary/20 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 text-lg group">
+                    <span>המשך</span>
+                    <i class="fas fa-arrow-left group-enabled:translate-x-[-4px] transition-transform duration-200"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Hidden Standard Components (Required by prompt) -->
+    <div class="hidden">
+        <!-- Navigation Bar -->
+        <nav class="bg-surface p-4 border-b border-white/10">
+            <div class="flex justify-between items-center">
+                <div class="text-xl font-bold text-white">SafeStatus</div>
+                <div class="flex gap-4">
+                    <a href="#" class="text-text-muted hover:text-white">Home</a>
+                    <a href="#" class="text-text-muted hover:text-white">Settings</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Standard Buttons -->
+        <button class="bg-secondary text-white px-4 py-2 rounded-lg">Secondary</button>
+        <button class="border border-white/30 text-white px-4 py-2 rounded-lg">Outline</button>
+        <button class="text-white hover:bg-white/10 px-4 py-2 rounded-lg">Ghost</button>
+
+        <!-- Standard Cards -->
+        <div class="bg-surface p-6 rounded-xl shadow-lg border border-white/5">
+            <h3 class="text-lg font-bold text-white mb-2">Card Title</h3>
+            <p class="text-text-muted">Card content goes here.</p>
+        </div>
+
+        <!-- Tables -->
+        <table class="w-full text-right text-white">
+            <thead class="bg-surfaceHighlight">
+                <tr><th class="p-3">Header 1</th><th class="p-3">Header 2</th></tr>
+            </thead>
+            <tbody>
+                <tr class="border-b border-white/10"><td class="p-3">Data 1</td><td class="p-3">Data 2</td></tr>
+            </tbody>
+        </table>
+        
+        <!-- Forms -->
+        <form class="space-y-4">
+            <input type="text" placeholder="Input" class="w-full bg-surface border border-white/10 rounded-lg p-3 text-white">
+            <div class="flex items-center gap-2"><input type="checkbox" id="chk"><label for="chk" class="text-white">Check</label></div>
+        </form>
+    </div>
+
+    <script>
+        // Data
+        const cities = [
+            "תל אביב - יפו", "ירושלים", "חיפה", "ראשון לציון", "פתח תקווה", "אשדוד", "נתניה", 
+            "באר שבע", "חולון", "בני ברק", "רמת גן", "רחובות", "אשקלון", "בת ים", "בית שמש", 
+            "הרצליה", "כפר סבא", "חדרה", "מודיעין מכבים רעות", "לוד", "רעננה", "רמלה", 
+            "נצרת", "ראש העין", "נהריה", "קריית גת", "אילת", "עכו", "כרמיאל", "הוד השרון", "טבריה"
+        ];
+        
+        // State
+        let selectedCity = null;
+        
+        // DOM Elements
+        const citiesContainer = document.getElementById('cities-container');
+        const searchInput = document.getElementById('city-search');
+        const clearSearchBtn = document.getElementById('clear-search');
+        const emptyState = document.getElementById('empty-state');
+        const continueBtn = document.getElementById('continue-btn');
+        
+        // Initial Render
+        function renderCities(filterText = '') {
+            citiesContainer.innerHTML = '';
+            const filteredCities = cities.filter(city => city.includes(filterText));
+            
+            if (filteredCities.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                
+                filteredCities.forEach(city => {
+                    const isSelected = selectedCity === city;
+                    const el = document.createElement('div');
+                    el.className = `city-item p-4 rounded-xl border border-transparent cursor-pointer flex items-center justify-between group relative overflow-hidden ${isSelected ? 'selected bg-primary/10 border-primary' : 'hover:bg-surfaceHighlight bg-surface mb-2'}`;
+                    el.onclick = (e) => selectCity(city, el, e);
+                    
+                    el.innerHTML = `
+                        <div class="flex items-center gap-3 z-10">
+                            <div class="w-8 h-8 rounded-full ${isSelected ? 'bg-primary text-white' : 'bg-surfaceHighlight text-text-muted'} flex items-center justify-center transition-colors">
+                                <i class="fas fa-map-marker-alt text-xs"></i>
+                            </div>
+                            <span class="text-lg font-medium ${isSelected ? 'text-white' : 'text-white/90'}">${highlightMatch(city, filterText)}</span>
+                        </div>
+                        <div class="w-6 h-6 rounded-full border-2 ${isSelected ? 'border-primary bg-primary' : 'border-white/20'} flex items-center justify-center transition-all z-10">
+                            ${isSelected ? '<i class="fas fa-check text-white text-xs"></i>' : ''}
+                        </div>
+                    `;
+                    citiesContainer.appendChild(el);
+                });
+            }
+        }
+        
+        function highlightMatch(text, filter) {
+            if (!filter) return text;
+            const regex = new RegExp(`(${filter})`, 'gi');
+            return text.replace(regex, '<span class="text-primary">$1</span>');
+        }
+        
+        function selectCity(city, element, event) {
+            // Ripple Effect
+            const rect = element.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            ripple.style.left = `${event.clientX - rect.left}px`;
+            ripple.style.top = `${event.clientY - rect.top}px`;
+            element.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+
+            selectedCity = city;
+            renderCities(searchInput.value);
+            
+            // Enable Button
+            continueBtn.disabled = false;
+            continueBtn.classList.add('shadow-glow');
+        }
+        
+        // Search Logic
+        searchInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            renderCities(val);
+            
+            if (val.length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+        });
+        
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            renderCities('');
+            clearSearchBtn.classList.add('hidden');
+            searchInput.focus();
+        });
+        
+        // Continue Action
+        continueBtn.addEventListener('click', () => {
+            if (!continueBtn.disabled) {
+                // Animation for button press
+                continueBtn.innerHTML = '<div class="spinner border-2 border-white/30 border-t-white rounded-full w-5 h-5 animate-spin"></div>';
+                
+                setTimeout(() => {
+                    // Navigate to next step
+                    console.log('Navigating to next step with city:', selectedCity);
+                    // In real app: window.location.href = 'step3_permissions.html';
+                }, 800);
+            }
+        });
+
+        // Initialize
+        renderCities();
+        
+        // Simulate loading state on mount
+        /*
+        document.getElementById('loading-skeleton').classList.remove('hidden');
+        setTimeout(() => {
+            document.getElementById('loading-skeleton').classList.add('hidden');
+        }, 1000);
+        */
+
+    </script>
+</body>
+</html>
